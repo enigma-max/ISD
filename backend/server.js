@@ -1,21 +1,15 @@
-const express = require("express");
-const cors = require("cors");
+import express from 'express';
+import dotenv from 'dotenv';
+import restaurantRoutes from './routes/restaurantRoutes.js';
+
+dotenv.config();
 
 const app = express();
-
-app.use(cors());
 app.use(express.json());
 
-// This variable lives in the server's memory
-let serverCount = 0;
+app.use('/api/restaurants', restaurantRoutes);
 
-app.post("/api/test", (req, res) => {
-  serverCount += 1; // Increase the count
-  console.log(`Current count is: ${serverCount}`);
-  
-  // Send the updated count back to the frontend
-  res.json({ count: serverCount });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

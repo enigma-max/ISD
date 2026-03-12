@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+// import { supabase } from "@/lib/supabase";
 import type { Restaurant } from "@/types/restaurant";
 
 interface UseRestaurantsOptions {
@@ -16,30 +16,26 @@ export function useRestaurants({ page = 1, pageSize = 9, searchQuery }: UseResta
   useEffect(() => {
     const fetchRestaurants = async () => {
       setLoading(true);
-      const start = (page - 1) * pageSize;
-      const end = start + pageSize - 1;
-
-      let query = supabase
-        .from("restaurant")
-        .select("*", { count: "exact" });
-
-      if (searchQuery?.trim()) {
-        query = query.ilike("name", `%${searchQuery.trim()}%`);
-      }
-
-      const { data, count, error } = await query
-        .range(start, end)
-        .order("name");
-
-      if (error) {
-        console.error("Error fetching restaurants:", error);
-      } else {
-        setRestaurants(data || []);
-        setTotalCount(count || 0);
+      try {
+        const params = new URLSearchParams();
+        params.append("page", String(page));
+        params.append("limit", String(pageSize));
+        if (searchQuery && searchQuery.trim()) {
+          params.append("search", searchQuery.trim());
+        }
+        const res = await fetch(`http://localhost:5000/api/restaurants?${params.toString()}`);
+        if (!res.ok) throw new Error("Failed to fetch restaurants");
+        const data = await res.json();
+        // If backend returns an array, set totalCount to array length (no pagination info)
+        setRestaurants(Array.isArray(data) ? data : data.restaurants || []);
+        setTotalCount(Array.isArray(data) ? data.length : data.totalCount || 0);
+      } catch (err) {
+        console.error("Error fetching restaurants:", err);
+        setRestaurants([]);
+        setTotalCount(0);
       }
       setLoading(false);
     };
-
     fetchRestaurants();
   }, [page, pageSize, searchQuery]);
 

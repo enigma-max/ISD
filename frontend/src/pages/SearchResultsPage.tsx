@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search, SlidersHorizontal } from "lucide-react";
 
 import RestaurantCard from "@/components/RestaurantCard";
@@ -15,6 +15,10 @@ const PAGE_SIZE = 9;
 
 const RestaurantPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Get the search query from the URL (?q=...)
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get("q") || "";
 
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -23,7 +27,8 @@ const RestaurantPage = () => {
 
   const { restaurants, loading, totalPages } = useRestaurants({
     page,
-    pageSize: PAGE_SIZE
+    pageSize: PAGE_SIZE,
+    searchQuery,
   });
 
   // Apply filters after fetching

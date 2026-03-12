@@ -28,7 +28,9 @@ const RestaurantCard = ({ restaurant }: Props) => {
           </div>
         )}
       </div>
+
       <div className="p-3 sm:p-4">
+        {/* Row 1: Name + Pricing */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-card-foreground text-sm sm:text-base leading-tight line-clamp-1">
             {restaurant.name}
@@ -39,9 +41,34 @@ const RestaurantCard = ({ restaurant }: Props) => {
             </span>
           )}
         </div>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-          {restaurant.cuisine_type}
-        </p>
+
+        {/* Row 2: Rating + Cuisine */}
+        <div className="flex items-center gap-2 mt-1">
+          {restaurant.avg_rating != null && (
+            <div className="flex items-center gap-0.5">
+              <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs sm:text-sm font-medium text-card-foreground">
+                {Number(restaurant.avg_rating).toFixed(1)}
+              </span>
+              {restaurant.total_ratings != null && (
+                <span className="text-xs text-muted-foreground">
+                  ({restaurant.total_ratings >= 1000
+                    ? `${Math.floor(restaurant.total_ratings / 1000)}k+`
+                    : restaurant.total_ratings}
+                  )
+                </span>
+              )}
+            </div>
+          )}
+
+          {restaurant.avg_rating != null && (
+            <span className="text-xs text-muted-foreground">·</span>
+          )}
+
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            {restaurant.cuisine_type}
+          </p>
+        </div>
       </div>
     </div>
   );

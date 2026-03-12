@@ -19,7 +19,6 @@ export const fetchRestaurants = async (req, res) => {
     const restaurants = await getRestaurants(page, pageSize, searchQuery, latitude, longitude);
     const totalCount = await getRestaurantCount(searchQuery);
     const totalPages = Math.ceil(totalCount / pageSize);
-
     res.json({
       restaurants,
       pagination: {

@@ -6,6 +6,8 @@ export interface Restaurant {
   pricing?: string;
   cover_url?: string;
   logo_url?: string;
+  avg_rating?: number;    
+  total_ratings?: number;
 }
 
 export interface Rating {

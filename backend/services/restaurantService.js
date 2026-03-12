@@ -63,7 +63,8 @@ export const getRestaurantDetails = async (id) => {
       r.cover_url,
       r.logo_url,
 
-      COALESCE(AVG(rt.rating),0) AS rating,
+      COALESCE(ROUND(AVG(rt.rating)::numeric, 1), 0) AS avg_rating,
+      COUNT(rt.rating_id)                             AS total_ratings,
 
       l.latitude,
       l.longitude,

@@ -1,7 +1,6 @@
-//for search
-//for search with location-based cuisine matching
 export const getRestaurantsQuery = `
-WITH search_results AS (
+WITH all_results AS (
+  -- Priority 1: Direct name match
   SELECT
     r.restaurant_id,
     r.name,
@@ -9,18 +8,19 @@ WITH search_results AS (
     r.pricing,
     r.logo_url,
     r.cover_url,
-    COALESCE(AVG(rt.rating), 0) as avg_rating,
+    rt.rating,
+    rt.rating_id,
     l.latitude,
     l.longitude,
-    1 as priority -- Direct name match gets highest priority
+    1 AS priority
   FROM restaurant r
   LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
   WHERE r.name ILIKE $3
-  GROUP BY r.restaurant_id, l.latitude, l.longitude
-  
-  UNION
-  
+
+  UNION ALL
+
+  -- Priority 2: Same cuisine, within 10km
   SELECT
     r.restaurant_id,
     r.name,
@@ -28,38 +28,62 @@ WITH search_results AS (
     r.pricing,
     r.logo_url,
     r.cover_url,
-    COALESCE(AVG(rt.rating), 0) as avg_rating,
+    rt.rating,
+    rt.rating_id,
     l.latitude,
     l.longitude,
-    2 as priority -- Cuisine match gets lower priority
+    2 AS priority
   FROM restaurant r
   LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
   WHERE r.cuisine_type IN (
-    SELECT DISTINCT cuisine_type 
-    FROM restaurant 
+    SELECT DISTINCT cuisine_type
+    FROM restaurant
     WHERE name ILIKE $3
   )
-  AND r.name NOT ILIKE $3 -- Exclude already matched by name
+  AND r.name NOT ILIKE $3
   AND ($4::numeric IS NULL OR $5::numeric IS NULL OR (
-    -- Calculate distance if coordinates provided (Haversine formula approximation)
     (6371 * acos(
-      cos(radians($4)) * cos(radians(l.latitude)) * 
-      cos(radians(l.longitude) - radians($5)) + 
+      cos(radians($4)) * cos(radians(l.latitude)) *
+      cos(radians(l.longitude) - radians($5)) +
       sin(radians($4)) * sin(radians(l.latitude))
-    )) <= 10 -- Within 10km radius
+    )) <= 10
   ))
-  GROUP BY r.restaurant_id, l.latitude, l.longitude
+),
+aggregated AS (
+  SELECT
+    restaurant_id,
+    name,
+    cuisine_type,
+    pricing,
+    logo_url,
+    cover_url,
+    latitude,
+    longitude,
+    MIN(priority)                                   AS priority,
+    COALESCE(ROUND(AVG(rating)::numeric, 1), 0)     AS avg_rating,
+    COUNT(rating_id)                                AS total_ratings
+  FROM all_results
+  GROUP BY
+    restaurant_id,
+    name,
+    cuisine_type,
+    pricing,
+    logo_url,
+    cover_url,
+    latitude,
+    longitude
 )
-SELECT 
+SELECT
   restaurant_id,
   name,
   cuisine_type,
   pricing,
   logo_url,
   cover_url,
-  avg_rating
-FROM search_results
+  avg_rating,
+  total_ratings
+FROM aggregated
 ORDER BY priority ASC, avg_rating DESC, name ASC
 LIMIT $1 OFFSET $2
 `;

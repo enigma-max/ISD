@@ -49,6 +49,6 @@ export function useRestaurants({ page = 1, pageSize = 9, searchQuery,latitude,
   }, [page, pageSize, searchQuery]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
-
+  console.log(restaurants)
   return { restaurants, loading, totalCount, totalPages, page };
 }

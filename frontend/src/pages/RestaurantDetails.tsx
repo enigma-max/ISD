@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft, ImageOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+// import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNavbar from "@/components/BottomNavbar";
 import type { Restaurant } from "@/types/restaurant";
@@ -9,30 +9,24 @@ import type { Restaurant } from "@/types/restaurant";
 const RestaurantDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchRestaurant = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("restaurant")
-        .select("*")
-        .eq("restaurant_id", id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error:", error);
-        setNotFound(true);
-      } else if (!data) {
-        setNotFound(true);
-      } else {
+      try {
+        const res = await fetch(`http://localhost:5000/api/restaurants/${id}`);
+        if (!res.ok) throw new Error("Not found");
+        const data = await res.json();
         setRestaurant(data);
+      } catch (err) {
+        setNotFound(true);
       }
       setLoading(false);
     };
-    fetch();
+    fetchRestaurant();
   }, [id]);
 
   if (loading) {
@@ -101,14 +95,35 @@ const RestaurantDetails = () => {
         {/* Info */}
         <div className={`p-4 sm:p-6 ${restaurant.logo_url ? "pt-14 sm:pt-16" : ""}`}>
           <h1 className="font-bold text-foreground text-xl sm:text-2xl lg:text-3xl">{restaurant.name}</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            {restaurant.cuisine_type}
-            {restaurant.pricing && <span> · {restaurant.pricing}</span>}
-          </p>
+          <div className="flex flex-wrap items-center gap-3 mt-1 text-sm sm:text-base text-muted-foreground">
+            <span>{restaurant.cuisine_type}</span>
+            {restaurant.pricing && <span>· {restaurant.pricing}</span>}
+            {restaurant.rating && (
+              <span className="flex items-center gap-1">
+                · <span className="font-semibold text-yellow-500">★</span> 
+                {Number(restaurant.rating).toFixed(1)}
+              </span>
+            )}
+          </div>
           {restaurant.description && (
             <p className="text-sm sm:text-base text-foreground/80 mt-4 leading-relaxed">
               {restaurant.description}
             </p>
+          )}
+
+          {/* Discount/Deal */}
+          {(restaurant.discount_name || restaurant.discount) && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <div className="font-semibold text-green-700">
+                {restaurant.discount_name || "Special Offer"}
+              </div>
+              <div className="text-green-800 text-sm mt-1">
+                {restaurant.discount ? `${restaurant.discount}% off` : null}
+                {restaurant.start_date && restaurant.end_date && (
+                  <span> · {restaurant.start_date} to {restaurant.end_date}</span>
+                )}
+              </div>
+            </div>
           )}
 
           <div className="mt-8 p-4 sm:p-6 bg-card rounded-xl border border-border">

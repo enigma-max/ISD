@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import CuisineCarousel from "@/components/CuisineCarousel";
 import BottomNavbar from "@/components/BottomNavbar";
 import { cuisines, popularSearches } from "@/data/mockData";
-
+import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import SearchSuggestions from "@/components/SearchSuggestions";
 const SearchPage = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const suggestions = useSearchSuggestions(query);
   const [recentSearches, setRecentSearches] = useState(["Panshi restaurant", "Digger", "Ramen"]);
 
   const handleSearch = () => {
@@ -21,7 +23,7 @@ const SearchPage = () => {
 
   const handleTagClick = (tag: string) => {
     if (!recentSearches.includes(tag)) {
-      setRecentSearches((prev) => [tag, ...prev]);
+      setRecentSearches((prev) => [tag, ...prev].slice(0, 5));
     }
     navigate(`/search-results?q=${encodeURIComponent(tag)}`);
   };
@@ -38,21 +40,35 @@ const SearchPage = () => {
           <button onClick={() => navigate(-1)} className="text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex-1 flex items-center bg-card border border-border rounded-full px-3 py-2.5">
-            <Search className="w-4 h-4 text-muted-foreground mr-2" />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Search Restaurants and Cuisine"
-              className="flex-1 text-sm sm:text-base bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+
+          <div className="flex-1 relative">
+            <div className="flex items-center bg-card border border-border rounded-full px-3 py-2.5">
+              <Search className="w-4 h-4 text-muted-foreground mr-2" />
+
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="Search Restaurants and Cuisine"
+                className="flex-1 text-sm sm:text-base bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+              />
+
+              {query && (
+                <button onClick={() => setQuery("")}>
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+
+            <SearchSuggestions
+              suggestions={suggestions}
+              query={query}
+              onSelect={(value) => {
+                setQuery(value);
+                navigate(`/search-results?q=${encodeURIComponent(value)}`);
+              }}
             />
-            {query && (
-              <button onClick={() => setQuery("")}>
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
           </div>
         </div>
 

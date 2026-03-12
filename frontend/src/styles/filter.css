@@ -1,0 +1,77 @@
+/* Filter panel styles */
+.filter-panel {
+  @apply border-r border-border bg-card p-6 overflow-y-auto;
+  min-width: 280px;
+  max-width: 320px;
+}
+
+.filter-section {
+  @apply mb-6;
+}
+
+.filter-section-title {
+  @apply text-sm font-semibold text-foreground mb-3;
+}
+
+.filter-radio-label,
+.filter-checkbox-label {
+  @apply flex items-center gap-3 py-1.5 text-sm text-foreground cursor-pointer transition-colors;
+}
+
+.filter-radio-label:hover,
+.filter-checkbox-label:hover {
+  @apply text-primary;
+}
+
+.quick-filter-chip {
+  @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-border text-sm font-medium cursor-pointer transition-all select-none;
+}
+
+.quick-filter-chip:hover {
+  @apply border-primary/50;
+}
+
+.quick-filter-chip[data-active="true"] {
+  @apply border-primary bg-primary/5 text-primary;
+}
+
+/* Restaurant card */
+.restaurant-card {
+  @apply bg-card rounded-lg overflow-hidden cursor-pointer transition-shadow;
+}
+
+.restaurant-card:hover {
+  @apply shadow-lg;
+}
+
+.restaurant-card-image {
+  @apply w-full h-48 object-cover relative;
+}
+
+.restaurant-card-body {
+  @apply p-3;
+}
+
+.restaurant-name {
+  @apply text-sm font-semibold text-foreground truncate;
+}
+
+.restaurant-meta {
+  @apply text-xs text-muted-foreground mt-1;
+}
+
+.restaurant-offer {
+  @apply text-xs font-medium mt-1;
+  color: hsl(var(--offer));
+}
+
+.free-delivery-text {
+  @apply text-xs font-medium;
+  color: hsl(var(--free-delivery));
+}
+
+/* Grid */
+.restaurant-grid {
+  @apply grid gap-6;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}

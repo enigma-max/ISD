@@ -1,15 +1,47 @@
 import pool from "../config/db.js"
 import { getRestaurantsQuery } from "../queries/restaurantQueries.js"
 import {getRestaurantSuggestionsQuery} from "../queries/restaurantQueries.js"
-export const getRestaurants = async (limit, offset, search="") => {
+export const getRestaurants = async (page, pageSize, searchQuery, latitude, longitude) => {
+  const offset = (page - 1) * pageSize;
+  const searchPattern = `%${searchQuery}%`;
 
-  const result = await pool.query(
-    getRestaurantsQuery,
-    [limit, offset, `%${search}%`]
-  )
+  console.log('Query parameters:', {
+    pageSize,
+    offset,
+    searchPattern,
+    latitude,
+    longitude
+  });
 
-  return result.rows
-}
+  const result = await pool.query(getRestaurantsQuery, [
+    pageSize,         // $1: LIMIT
+    offset,           // $2: OFFSET
+    searchPattern,    // $3: search pattern
+    latitude,         // $4: latitude (can be null)
+    longitude         // $5: longitude (can be null)
+  ]);
+
+  return result.rows;
+};
+
+export const getRestaurantCount = async (searchQuery) => {
+  const searchPattern = `%${searchQuery}%`;
+  
+  const countQuery = `
+    SELECT COUNT(DISTINCT r.restaurant_id) as total
+    FROM restaurant r
+    WHERE r.name ILIKE $1
+       OR r.cuisine_type IN (
+         SELECT DISTINCT cuisine_type 
+         FROM restaurant 
+         WHERE name ILIKE $1
+       )
+  `;
+  
+  const result = await pool.query(countQuery, [searchPattern]);
+  return parseInt(result.rows[0].total);
+};
+
 
 export const getRestaurantSuggestions = async (query) => {
   const result = await pool.query(

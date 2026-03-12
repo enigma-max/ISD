@@ -1,28 +1,42 @@
-import { getRestaurants } from "../services/restaurantService.js"
-import {getRestaurantSuggestions} from "../services/restaurantService.js"
-import {getRestaurantDetails} from "../services/restaurantService.js"
-export const fetchRestaurants = async (req,res)=>{
+import { 
+  getRestaurants, 
+  getRestaurantCount, 
+  getRestaurantSuggestions, 
+  getRestaurantDetails 
+} from "../services/restaurantService.js"
 
-  try{
-    console.log("fetching restaurants with query:", req.query)  // <-- new line
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 10
-    const search = req.query.search || ""  // <-- new line
+export const fetchRestaurants = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const searchQuery = req.query.q || '';
+    const latitude = req.query.lat ? parseFloat(req.query.lat) : null;
+    const longitude = req.query.lng ? parseFloat(req.query.lng) : null;
 
-    const offset = (page-1)*limit
+    console.log('fetching restaurants with query:', req.query);
+    console.log('parsed params:', { page, pageSize, searchQuery, latitude, longitude });
 
-    const restaurants = await getRestaurants(limit, offset, search)
+    const restaurants = await getRestaurants(page, pageSize, searchQuery, latitude, longitude);
+    const totalCount = await getRestaurantCount(searchQuery);
+    const totalPages = Math.ceil(totalCount / pageSize);
 
-    res.json(restaurants)
-
-  }catch(err){
-
-    console.error(err)
-    res.status(500).json({error:"server error"})
-
+    res.json({
+      restaurants,
+      pagination: {
+        currentPage: page,
+        pageSize,
+        totalPages,
+        totalCount
+      }
+    });
+  } catch (error) {
+    console.error('Error in fetchRestaurants:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch restaurants',
+      message: error.message 
+    });
   }
-
-}
+};
 export const fetchSuggestions = async (req, res) => {
   try {
     const query = req.query.query || ""

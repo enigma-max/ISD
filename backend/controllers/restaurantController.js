@@ -3,7 +3,8 @@ import {
   getRestaurantCount, 
   getRestaurantSuggestions, 
   getRestaurantDetails,
-  getTopDiscountRestaurants
+  getTopDiscountRestaurants,
+  getTopRatedRestaurants
 } from "../services/restaurantService.js"
 
 export const fetchRestaurants = async (req, res) => {
@@ -76,6 +77,17 @@ export const fetchRestaurantDetails = async (req,res)=>{
 export const fetchTopDiscountRestaurants = async (req, res) => {
   try {
     const restaurants = await getTopDiscountRestaurants();
+    res.json(restaurants);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server error" });
+  }
+};
+
+// controllers/restaurantController.js
+export const fetchTopRatedRestaurants = async (req, res) => {
+  try {
+    const restaurants = await getTopRatedRestaurants();
     res.json(restaurants);
   } catch (err) {
     console.error(err);

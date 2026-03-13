@@ -2,6 +2,8 @@ import pool from "../config/db.js"
 import { getRestaurantsQuery } from "../queries/restaurantQueries.js"
 import {getRestaurantSuggestionsQuery} from "../queries/restaurantQueries.js"
 import { getTopDiscountRestaurantsQuery } from "../queries/restaurantQueries.js";
+import { getTopRatedRestaurantsQuery } from "../queries/restaurantQueries.js";
+
 export const getRestaurants = async (page, pageSize, searchQuery, latitude, longitude) => {
   const offset = (page - 1) * pageSize;
   const searchPattern = `%${searchQuery}%`;
@@ -104,5 +106,10 @@ export const getRestaurantDetails = async (id) => {
 
 export const getTopDiscountRestaurants = async () => {
   const result = await pool.query(getTopDiscountRestaurantsQuery);
+  return result.rows;
+};
+
+export const getTopRatedRestaurants = async () => {
+  const result = await pool.query(getTopRatedRestaurantsQuery);
   return result.rows;
 };

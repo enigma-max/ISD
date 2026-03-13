@@ -115,3 +115,20 @@ SELECT
   AND CURRENT_DATE BETWEEN start_date AND end_date
   ORDER BY r.name ASC;
 `
+
+export const getTopRatedRestaurantsQuery = `
+  SELECT 
+    r.restaurant_id,
+    r.name,
+    r.cover_url,
+    r.cuisine_type,
+    r.pricing,
+    COALESCE(ROUND(AVG(rt.rating)::numeric, 1), 0) AS avg_rating,
+    COUNT(rt.rating_id)                             AS total_ratings
+  FROM restaurant r
+  LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
+  GROUP BY r.restaurant_id
+  HAVING COUNT(rt.rating_id) > 0
+  ORDER BY avg_rating DESC, total_ratings DESC
+  LIMIT 10
+`;

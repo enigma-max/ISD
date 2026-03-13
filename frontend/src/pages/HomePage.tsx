@@ -7,8 +7,9 @@ import RestaurantCardSkeleton from "@/components/RestaurantCardSkeleton";
 import BottomNavbar from "@/components/BottomNavbar";
 import PaginationControls from "@/components/PaginationControls";
 import { useRestaurants } from "@/hooks/useRestaurants";
-import { cuisines, promoBanner } from "@/data/mockData";
+import { cuisines, promoBanner} from "@/data/mockData";
 import DiscountCarousel from "@/components/DiscountCarousel";
+import TopRatedCarousel from "@/components/TopRatedCarousel";
 
 const PAGE_SIZE = 9;
 
@@ -36,6 +37,8 @@ const HomePage = () => {
           <SearchBar readOnly />
         </div>
 
+        
+
         {/* Promo Banner */}
         <div className="px-4 sm:px-6 py-3">
           <div className="relative rounded-xl overflow-hidden shadow-sm">
@@ -56,6 +59,7 @@ const HomePage = () => {
           <CuisineCarousel cuisines={cuisines} />
         </div>
         <DiscountCarousel />
+        <TopRatedCarousel />
         {/* Restaurant Grid */}
         <div className="px-4 sm:px-6 pt-4">
           <h2 className="font-bold text-foreground text-lg sm:text-xl mb-4">All Restaurants</h2>

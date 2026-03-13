@@ -2,7 +2,8 @@ import {
   getRestaurants, 
   getRestaurantCount, 
   getRestaurantSuggestions, 
-  getRestaurantDetails 
+  getRestaurantDetails,
+  getTopDiscountRestaurants
 } from "../services/restaurantService.js"
 
 export const fetchRestaurants = async (req, res) => {
@@ -71,3 +72,13 @@ export const fetchRestaurantDetails = async (req,res)=>{
   }
 
 }
+
+export const fetchTopDiscountRestaurants = async (req, res) => {
+  try {
+    const restaurants = await getTopDiscountRestaurants();
+    res.json(restaurants);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server error" });
+  }
+};

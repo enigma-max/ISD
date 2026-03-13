@@ -8,6 +8,7 @@ import BottomNavbar from "@/components/BottomNavbar";
 import PaginationControls from "@/components/PaginationControls";
 import { useRestaurants } from "@/hooks/useRestaurants";
 import { cuisines, promoBanner } from "@/data/mockData";
+import DiscountCarousel from "@/components/DiscountCarousel";
 
 const PAGE_SIZE = 9;
 
@@ -54,7 +55,7 @@ const HomePage = () => {
         <div className="px-4 sm:px-6 py-3">
           <CuisineCarousel cuisines={cuisines} />
         </div>
-
+        <DiscountCarousel />
         {/* Restaurant Grid */}
         <div className="px-4 sm:px-6 pt-4">
           <h2 className="font-bold text-foreground text-lg sm:text-xl mb-4">All Restaurants</h2>

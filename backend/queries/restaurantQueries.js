@@ -95,3 +95,23 @@ WHERE name ILIKE $1
 ORDER BY name
 LIMIT 10
 `;
+
+export const getTopDiscountRestaurantsQuery = `
+SELECT 
+    r.restaurant_id,
+    r.name,
+    r.cover_url,
+    r.logo_url,
+    r.cuisine_type,
+    d.discount,
+    d.discount_name
+  FROM restaurant r
+  JOIN discount d ON d.restaurant_id = r.restaurant_id
+  WHERE CURRENT_DATE BETWEEN d.start_date AND d.end_date
+  AND d.discount = (
+    SELECT MAX(discount) FROM discount
+    WHERE CURRENT_DATE BETWEEN start_date AND end_date
+  )
+  AND CURRENT_DATE BETWEEN start_date AND end_date
+  ORDER BY r.name ASC;
+`

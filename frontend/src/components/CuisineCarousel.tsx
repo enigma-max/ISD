@@ -18,7 +18,7 @@ const CuisineCarousel = ({ cuisines }: Props) => {
               loading="lazy"
             />
           </div>
-          <span className="mt-1.5 text-xs sm:text-sm font-bold" style={{ color: "var(--pink)" }}>
+          <span className="mt-1.5 text-xs sm:text-sm font-medium" style={{ color: "var(--pink)" }}>
   {c.name}
 </span>
         </div>

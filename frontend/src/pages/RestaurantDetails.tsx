@@ -1,11 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft, ImageOff } from "lucide-react";
-// import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNavbar from "@/components/BottomNavbar";
 import StarRating from "@/components/StarRating"
-import type { Restaurant } from "@/types/restaurant";
+import "../styles/variables.css"
 
 const RestaurantDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -128,19 +127,36 @@ const RestaurantDetails = () => {
           )}
 
           {/* Discount/Deal */}
+          {/* Discount/Deal */}
           {(restaurant.discount_name || restaurant.discount) && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-              <div className="font-semibold text-green-700">
-                {restaurant.discount_name || "Special Offer"}
+            <div
+              className="mt-4 pl-3 pr-8 py-3 rounded-xl inline-flex items-center gap-2 overflow-hidden relative"
+              style={{ backgroundColor: "var(--pink-light)" }}
+            >
+              {/* Icon */}
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "var(--pink)" }}
+              >
+                <span className="text-white text-xs font-bold">%</span>
               </div>
-              <div className="text-green-800 text-sm mt-1">
-                {restaurant.discount ? `${restaurant.discount}% off` : null}
-                {restaurant.start_date && restaurant.end_date && (
-                  <span> · {restaurant.start_date} to {restaurant.end_date}</span>
+
+              {/* Text */}
+              <div>
+                <p className="font-bold text-sm" style={{ color: "var(--pink)" }}>
+                  {restaurant.discount ? `${Number(restaurant.discount) % 1 === 0
+                    ? Math.round(Number(restaurant.discount))
+                    : Number(restaurant.discount)}% off` : null}
+                </p>
+                {restaurant.discount_name && (
+                  <p className="text-xs" style={{ color: "var(--gray)" }}>
+                    {restaurant.discount_name}
+                  </p>
                 )}
               </div>
             </div>
           )}
+
 
           <div className="mt-8 p-4 sm:p-6 bg-card rounded-xl border border-border">
             <p className="text-muted-foreground text-sm sm:text-base text-center">

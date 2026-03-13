@@ -1,4 +1,5 @@
 import type { Cuisine } from "@/data/mockData";
+import "../styles/variables.css"
 
 interface Props {
   cuisines: Cuisine[];
@@ -17,7 +18,9 @@ const CuisineCarousel = ({ cuisines }: Props) => {
               loading="lazy"
             />
           </div>
-          <span className="mt-1.5 text-xs sm:text-sm font-medium text-foreground">{c.name}</span>
+          <span className="mt-1.5 text-xs sm:text-sm font-bold" style={{ color: "var(--pink)" }}>
+  {c.name}
+</span>
         </div>
       ))}
     </div>

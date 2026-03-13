@@ -4,6 +4,7 @@ import { ArrowLeft, ImageOff } from "lucide-react";
 // import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import BottomNavbar from "@/components/BottomNavbar";
+import StarRating from "@/components/StarRating"
 import type { Restaurant } from "@/types/restaurant";
 
 const RestaurantDetails = () => {
@@ -95,12 +96,27 @@ const RestaurantDetails = () => {
         {/* Info */}
         <div className={`p-4 sm:p-6 ${restaurant.logo_url ? "pt-14 sm:pt-16" : ""}`}>
           <h1 className="font-bold text-foreground text-xl sm:text-2xl lg:text-3xl">{restaurant.name}</h1>
+          {restaurant.avg_rating != null && (
+            <div className="flex items-center gap-2 mt-2">
+              <StarRating rating={Number(restaurant.avg_rating)} />
+              <span className="text-sm sm:text-base font-semibold text-foreground">
+                {Number(restaurant.avg_rating).toFixed(1)}
+              </span>
+              {restaurant.total_ratings != null && (
+                <span className="text-sm text-muted-foreground">
+                  ({Number(restaurant.total_ratings) >= 1000
+                    ? `${Math.floor(Number(restaurant.total_ratings) / 1000)}k+`
+                    : restaurant.total_ratings})
+                </span>
+              )}
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-3 mt-1 text-sm sm:text-base text-muted-foreground">
             <span>{restaurant.cuisine_type}</span>
             {restaurant.pricing && <span>· {restaurant.pricing}</span>}
             {restaurant.rating && (
               <span className="flex items-center gap-1">
-                · <span className="font-semibold text-yellow-500">★</span> 
+                · <span className="font-semibold text-yellow-500">★</span>
                 {Number(restaurant.rating).toFixed(1)}
               </span>
             )}

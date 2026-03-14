@@ -20,7 +20,7 @@ WITH all_results AS (
 
   UNION ALL
 
-  -- Priority 2: Same cuisine, within 10km
+  -- Priority 2: Same cuisine as name match, within 10km
   SELECT
     r.restaurant_id,
     r.name,
@@ -49,6 +49,27 @@ WITH all_results AS (
       sin(radians($4)) * sin(radians(l.latitude))
     )) <= 10
   ))
+
+  UNION ALL
+
+  -- Priority 3: Direct cuisine type match ← THIS is what was missing
+  SELECT
+    r.restaurant_id,
+    r.name,
+    r.cuisine_type,
+    r.pricing,
+    r.logo_url,
+    r.cover_url,
+    rt.rating,
+    rt.rating_id,
+    l.latitude,
+    l.longitude,
+    3 AS priority
+  FROM restaurant r
+  LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
+  LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
+  WHERE r.cuisine_type ILIKE $3
+  AND r.name NOT ILIKE $3
 ),
 aggregated AS (
   SELECT

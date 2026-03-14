@@ -1,1 +1,1 @@
-This is the branch where I'm gonna add the menuitems per section, complete a restaurant's menu page
+This project is for **CSE326**. We are implementing the **“Search Restaurants and Menus”** feature inspired by the Foodpanda app.

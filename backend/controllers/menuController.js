@@ -39,6 +39,27 @@ export const getMenuByRestaurant = async (req, res) => {
   try {
     const { restaurant_id } = req.params;
 
+    const popularSql = `
+      SELECT
+        mi.menu_item_id,
+        mi.name,
+        mi.description,
+        mi.price,
+        mi.photo_url
+      FROM menu_item mi
+      JOIN section s ON mi.section_id = s.section_id
+      WHERE s.restaurant_id = $1
+        -- For now, treat some items as "popular" without requiring extra columns.
+        -- This can later be refined to use a real is_popular flag or sales data.
+      ORDER BY
+        mi.menu_item_id ASC
+      LIMIT 5
+    `;
+
+    const popularResult = await pool.query(popularSql, [restaurant_id]);
+    const popularItems = popularResult.rows;
+    const popularIds = new Set(popularItems.map((item) => item.menu_item_id));
+
     const sql = `
       SELECT
         s.section_id,
@@ -77,11 +98,32 @@ export const getMenuByRestaurant = async (req, res) => {
           description: row.description,
           price: row.price,
           photo_url: row.photo_url,
+          is_popular: popularIds.has(row.menu_item_id),
         });
       }
     }
 
-    const sections = Array.from(sectionsMap.values());
+    let sections = Array.from(sectionsMap.values());
+
+    if (popularItems.length > 0) {
+      const popularSection = {
+        section_id: -1,
+        section_name: "Popular",
+        is_popular: true,
+        items: popularItems.map((item) => ({
+          menu_item_id: item.menu_item_id,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          // No original_price column yet; this can be wired
+          // up to a real discount/original price later.
+          photo_url: item.photo_url,
+          is_popular: true,
+        })),
+      };
+
+      sections = [popularSection, ...sections];
+    }
 
     res.json(sections);
   } catch (error) {

@@ -13,12 +13,14 @@ type MenuItem = {
   price: number;
   photo_url: string | null;
   original_price?: number | null;
+  is_popular?: boolean;
 };
 
 type MenuSection = {
   section_id: number;
   section_name: string;
   items: MenuItem[];
+  is_popular?: boolean;
 };
 
 const RestaurantDetails = () => {
@@ -260,29 +262,31 @@ const RestaurantDetails = () => {
             {!menuLoading && hasMenu && (
               <div className="space-y-8">
                 {/* Scrollable section tabs */}
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-border">
-                  {menuSections
-                    .filter(
-                      (section) =>
-                        section.items && section.items.length > 0,
-                    )
-                    .map((section) => {
-                      const isActive = section.section_id === activeSectionId;
-                      return (
-                        <button
-                          key={section.section_id}
-                          type="button"
-                          onClick={() => handleSectionClick(section.section_id)}
-                          className={`whitespace-nowrap rounded-full px-3 py-1 text-sm border transition-colors ${
-                            isActive
-                              ? "bg-foreground text-background border-foreground"
-                              : "bg-card text-foreground border-border hover:bg-muted"
-                          }`}
-                        >
-                          {section.section_name}
-                        </button>
-                      );
-                    })}
+                <div className="sticky top-0 z-20 bg-background pt-2 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-border">
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {menuSections
+                      .filter(
+                        (section) =>
+                          section.items && section.items.length > 0,
+                      )
+                      .map((section) => {
+                        const isActive = section.section_id === activeSectionId;
+                        return (
+                          <button
+                            key={section.section_id}
+                            type="button"
+                            onClick={() => handleSectionClick(section.section_id)}
+                            className={`whitespace-nowrap rounded-full px-3 py-1 text-sm border transition-colors ${
+                              isActive
+                                ? "bg-foreground text-background border-foreground"
+                                : "bg-card text-foreground border-border hover:bg-muted"
+                            }`}
+                          >
+                            {section.section_name}
+                          </button>
+                        );
+                      })}
+                  </div>
                 </div>
 
                 {/* Section content */}
@@ -295,53 +299,116 @@ const RestaurantDetails = () => {
                       }}
                       className="scroll-mt-24"
                     >
-                      <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">
-                        {section.section_name}
-                      </h2>
-                      <div className="space-y-4">
-                        {section.items.map((item) => (
-                          <div
-                            key={item.menu_item_id}
-                            className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-border bg-card hover:shadow-sm transition-shadow"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm sm:text-base text-foreground">
-                                {item.name}
-                              </p>
-                              <div className="mt-1 flex items-baseline gap-2">
-                                <span className="text-sm sm:text-base font-semibold text-foreground">
-                                  Tk {Number(item.price).toFixed(0)}
-                                </span>
-                                {item.original_price &&
-                                  Number(item.original_price) >
-                                    Number(item.price) && (
-                                    <span className="text-xs sm:text-sm text-muted-foreground line-through">
-                                      Tk {Number(item.original_price).toFixed(0)}
-                                    </span>
-                                  )}
-                              </div>
-                              {item.description && (
-                                <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2">
-                                  {item.description}
+                      {section.is_popular ? (
+                        <div className="mb-4">
+                          <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
+                            <span>🔥</span>
+                            <span>{section.section_name}</span>
+                          </h2>
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                            Most ordered right now
+                          </p>
+                        </div>
+                      ) : (
+                        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">
+                          {section.section_name}
+                        </h2>
+                      )}
+
+                      {section.is_popular ? (
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                          {section.items.map((item) => (
+                            <div
+                              key={item.menu_item_id}
+                              className="flex items-start gap-3 p-3 sm:p-4 rounded-xl border border-border bg-card"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm sm:text-base text-foreground">
+                                  {item.name}
                                 </p>
-                              )}
-                            </div>
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                              {item.photo_url ? (
-                                <img
-                                  src={item.photo_url}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                                  <ImageOff className="w-5 h-5" />
+                                <div className="mt-1 flex items-baseline gap-2">
+                                  <span className="text-sm sm:text-base font-semibold text-foreground">
+                                    Tk {Number(item.price).toFixed(0)}
+                                  </span>
+                                  {item.original_price &&
+                                    Number(item.original_price) >
+                                      Number(item.price) && (
+                                      <span className="text-xs sm:text-sm text-muted-foreground line-through">
+                                        Tk{" "}
+                                        {Number(item.original_price).toFixed(0)}
+                                      </span>
+                                    )}
                                 </div>
-                              )}
+                              </div>
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                                {item.photo_url ? (
+                                  <img
+                                    src={item.photo_url}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                                    <ImageOff className="w-4 h-4" />
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {section.items.map((item) => (
+                            <div
+                              key={item.menu_item_id}
+                              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-border bg-card hover:shadow-sm transition-shadow"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm sm:text-base text-foreground">
+                                  {item.name}
+                                </p>
+                                <div className="mt-1 flex items-baseline gap-2">
+                                  <span className="text-sm sm:text-base font-semibold text-foreground">
+                                    Tk {Number(item.price).toFixed(0)}
+                                  </span>
+                                  {item.original_price &&
+                                    Number(item.original_price) >
+                                      Number(item.price) && (
+                                      <span className="text-xs sm:text-sm text-muted-foreground line-through">
+                                        Tk{" "}
+                                        {Number(item.original_price).toFixed(0)}
+                                      </span>
+                                    )}
+                                </div>
+                                {item.description && (
+                                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                                    {item.description}
+                                  </p>
+                                )}
+                                {item.is_popular && (
+                                  <p className="mt-2 text-xs font-medium text-orange-500 flex items-center gap-1">
+                                    <span>🔥</span>
+                                    <span>Popular</span>
+                                  </p>
+                                )}
+                              </div>
+                              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                                {item.photo_url ? (
+                                  <img
+                                    src={item.photo_url}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                                    <ImageOff className="w-5 h-5" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : null,
                 )}

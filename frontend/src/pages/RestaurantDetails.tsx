@@ -84,11 +84,34 @@ const RestaurantDetails = () => {
     const handleScroll = () => {
       const threshold = 400; // pixels from top before showing button
       setShowScrollTop(window.scrollY > threshold);
+
+      // Update active section based on scroll position
+      const offset = 120; // account for sticky tabs + header
+      let closestSectionId: number | null = null;
+      let closestDistance = Infinity;
+
+      menuSections.forEach((section) => {
+        const el = sectionRefs.current[section.section_id];
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const distance = Math.abs(rect.top - offset);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSectionId = section.section_id;
+        }
+      });
+
+      if (
+        closestSectionId !== null &&
+        closestSectionId !== activeSectionId
+      ) {
+        setActiveSectionId(closestSectionId);
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [menuSections, activeSectionId]);
 
   if (loading) {
     return (
@@ -262,10 +285,15 @@ const RestaurantDetails = () => {
           {/* Menu sections */}
           <div className="mt-8">
             {menuLoading && (
-              <div className="p-4 sm:p-6 bg-card rounded-xl border border-border space-y-3">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
+              <div className="space-y-3 mb-4">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Loading menu…
+                </p>
+                <div className="p-4 sm:p-6 bg-card rounded-xl border border-border space-y-3">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
               </div>
             )}
 
@@ -278,9 +306,9 @@ const RestaurantDetails = () => {
             )}
 
             {!menuLoading && hasMenu && (
-              <div className="space-y-8">
+              <div className="space-y-8 animate-in fade-in-0 duration-200">
                 {/* Scrollable section tabs */}
-                <div className="sticky top-0 z-20 bg-background pt-2 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-border">
+                <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pt-2 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-border shadow-sm">
                   <div className="flex gap-3 overflow-x-auto pb-2">
                     {menuSections
                       .filter(
@@ -296,7 +324,7 @@ const RestaurantDetails = () => {
                             onClick={() => handleSectionClick(section.section_id)}
                             className={`whitespace-nowrap rounded-full px-3 py-1 text-sm border transition-colors ${
                               isActive
-                                ? "bg-foreground text-background border-foreground"
+                                ? "bg-foreground text-background border-foreground font-semibold shadow-sm"
                                 : "bg-card text-foreground border-border hover:bg-muted"
                             }`}
                           >

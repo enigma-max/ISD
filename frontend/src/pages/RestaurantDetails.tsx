@@ -1,75 +1,66 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, ImageOff } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import BottomNavbar from "@/components/BottomNavbar";
 import StarRating from "@/components/StarRating";
+import MenuSearchBar from "@/components/MenuSearchBar";
+import MenuList from "@/components/MenuList";
+import { MenuItem } from "@/components/MenuItemCard";
 import "../styles/variables.css";
-
-type MenuItem = {
-  menu_item_id: number;
-  name: string;
-  description: string | null;
-  price: number;
-  photo_url: string | null;
-  original_price?: number | null;
-  is_popular?: boolean;
-};
 
 type MenuSection = {
   section_id: number;
   section_name: string;
   items: MenuItem[];
-  is_popular?: boolean;
 };
 
 const RestaurantDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
   const [menuLoading, setMenuLoading] = useState(true);
+
   const [activeSectionId, setActiveSectionId] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+
 
   useEffect(() => {
     const fetchRestaurant = async () => {
-      setLoading(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/restaurants/${id}`);
-        if (!res.ok) throw new Error("Not found");
-        const data = await res.json();
-        setRestaurant(data);
-      } catch (err) {
+        const res = await fetch(
+          `http://localhost:5000/api/restaurants/${id}`,
+        );
+        if (!res.ok) throw new Error();
+        setRestaurant(await res.json());
+      } catch {
         setNotFound(true);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     const fetchMenu = async () => {
-      if (!id) return;
-      setMenuLoading(true);
       try {
         const res = await fetch(
           `http://localhost:5000/api/restaurants/menu/${id}`,
         );
-        if (!res.ok) {
-          throw new Error("Failed to load menu");
-        }
-        const data = (await res.json()) as MenuSection[];
+        const data = await res.json();
+
         setMenuSections(data);
-        const firstWithItems = data.find(
-          (section) => section.items && section.items.length > 0,
-        );
-        if (firstWithItems) {
-          setActiveSectionId(firstWithItems.section_id);
-        }
-      } catch (error) {
-        console.error(error);
+
+        const first = data.find((s: any) => s.items?.length > 0);
+        if (first) setActiveSectionId(first.section_id);
+      } catch {
         setMenuSections([]);
       } finally {
         setMenuLoading(false);
@@ -80,401 +71,228 @@ const RestaurantDetails = () => {
     fetchMenu();
   }, [id]);
 
+
+
   useEffect(() => {
     const handleScroll = () => {
-      const threshold = 400; // pixels from top before showing button
-      setShowScrollTop(window.scrollY > threshold);
+      setShowScrollTop(window.scrollY > 400);
 
-      // Update active section based on scroll position
-      const offset = 120; // account for sticky tabs + header
-      let closestSectionId: number | null = null;
-      let closestDistance = Infinity;
+      const offset = 140;
+      let closest: number | null = null;
+      let min = Infinity;
 
       menuSections.forEach((section) => {
         const el = sectionRefs.current[section.section_id];
         if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const distance = Math.abs(rect.top - offset);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestSectionId = section.section_id;
+
+        const dist = Math.abs(el.getBoundingClientRect().top - offset);
+
+        if (dist < min) {
+          min = dist;
+          closest = section.section_id;
         }
       });
 
-      if (
-        closestSectionId !== null &&
-        closestSectionId !== activeSectionId
-      ) {
-        setActiveSectionId(closestSectionId);
-      }
+      if (closest !== null) setActiveSectionId(closest);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [menuSections, activeSectionId]);
+  }, [menuSections]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background pb-20">
-        <div className="max-w-4xl mx-auto">
-          <Skeleton className="w-full h-56 sm:h-72" />
-          <div className="p-4 sm:p-6 space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-5 w-1/2" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        </div>
-        <BottomNavbar />
-      </div>
-    );
-  }
 
-  if (notFound || !restaurant) {
-    return (
-      <div className="min-h-screen bg-background pb-20 flex flex-col items-center justify-center">
-        <p className="text-muted-foreground text-lg">Restaurant not found.</p>
-        <button
-          onClick={() => navigate("/")}
-          className="mt-4 text-primary font-medium hover:underline"
-        >
-          Go back home
-        </button>
-        <BottomNavbar />
-      </div>
-    );
-  }
 
   const hasMenu =
     menuSections.length > 0 &&
-    menuSections.some((section) => section.items && section.items.length > 0);
+    menuSections.some((s) => s.items?.length > 0);
 
-  const handleSectionClick = (sectionId: number) => {
-    setActiveSectionId(sectionId);
-    const element = sectionRefs.current[sectionId];
-    if (element) {
-      const offset = 80; // approximate header height
-      const elementTop = element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
-        top: elementTop - offset,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const handleScrollTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
+ 
+const allMenuItems: MenuItem[] = (() => {
+  const map = new Map<string, MenuItem>();
+  menuSections.forEach((section) => {
+    section.items?.forEach((item) => {
+      map.set(item.menu_item_id.toString(), item); 
     });
+  });
+  return Array.from(map.values());
+})();
+
+  const filteredItems =
+    searchQuery.trim() !== ""
+      ? allMenuItems.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+      : [];
+
+
+
+  const handleSectionClick = (id: number) => {
+    setActiveSectionId(id);
+    const el = sectionRefs.current[id];
+    if (!el) return;
+    const offset = 120;
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: "smooth" });
   };
+
+  const handleSelectItem = (item: MenuItem) => {
+    console.log("Selected:", item);
+  };
+
+  const scrollTop = () =>
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+
+
+  if (loading) return null;
+
+  if (notFound || !restaurant)
+    return (
+      <div className="p-6 text-center">
+        Restaurant not found.
+        <button
+          onClick={() => navigate("/")}
+          className="block mt-4 text-primary"
+        >
+          Go back home
+        </button>
+      </div>
+    );
+
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-4xl mx-auto">
-        {/* Cover */}
-        <div className="relative">
-          {restaurant.cover_url ? (
-            <img
-              src={restaurant.cover_url}
-              alt={restaurant.name}
-              className="w-full h-56 sm:h-72 lg:h-80 object-cover"
-            />
-          ) : (
-            <div className="w-full h-56 sm:h-72 lg:h-80 bg-muted flex items-center justify-center">
-              <ImageOff className="w-16 h-16 text-muted-foreground" />
-            </div>
-          )}
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm rounded-full p-2 shadow hover:bg-card transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
+    <>
 
-          {/* Logo overlay */}
-          {restaurant.logo_url && (
-            <div className="absolute -bottom-10 left-4 sm:left-6">
+      <div className="bg-background min-h-screen pb-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+
+
+          <div className="relative h-64 bg-muted rounded-xl overflow-hidden mt-6">
+            {restaurant.cover_url ? (
               <img
-                src={restaurant.logo_url}
-                alt={`${restaurant.name} logo`}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-4 border-card bg-card object-cover shadow-md"
+                src={restaurant.cover_url}
+                className="w-full h-full object-cover"
               />
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
-        <div
-          className={`p-4 sm:p-6 ${
-            restaurant.logo_url ? "pt-14 sm:pt-16" : ""
-          }`}
-        >
-          <h1 className="font-bold text-foreground text-xl sm:text-2xl lg:text-3xl">
-            {restaurant.name}
-          </h1>
-          {restaurant.avg_rating != null && (
-            <div className="flex items-center gap-2 mt-2">
-              <StarRating rating={Number(restaurant.avg_rating)} />
-              <span className="text-sm sm:text-base font-semibold text-foreground">
-                {Number(restaurant.avg_rating).toFixed(1)}
-              </span>
-              {restaurant.total_ratings != null && (
-                <span className="text-sm text-muted-foreground">
-                  {Number(restaurant.total_ratings) >= 1000
-                    ? `${Math.floor(
-                        Number(restaurant.total_ratings) / 1000,
-                      )}k+`
-                    : `(${restaurant.total_ratings})`}
-                </span>
-              )}
-            </div>
-          )}
-          <div className="flex flex-wrap items-center gap-3 mt-1 text-sm sm:text-base text-muted-foreground">
-            <span>{restaurant.cuisine_type}</span>
-            {restaurant.pricing && <span>· {restaurant.pricing}</span>}
-            {restaurant.rating && (
-              <span className="flex items-center gap-1">
-                · <span className="font-semibold text-yellow-500">★</span>
-                {Number(restaurant.rating).toFixed(1)}
-              </span>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <ImageOff />
+              </div>
             )}
-          </div>
-          {restaurant.description && (
-            <p className="text-sm sm:text-base text-foreground/80 mt-4 leading-relaxed">
-              {restaurant.description}
-            </p>
-          )}
 
-          {/* Discount/Deal */}
-          {(restaurant.discount_name || restaurant.discount) && (
-            <div
-              className="mt-4 pl-3 pr-8 py-3 rounded-xl inline-flex items-center gap-2 overflow-hidden relative"
-              style={{ backgroundColor: "var(--pink-light)" }}
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute top-4 left-4 bg-card/80 backdrop-blur rounded-full p-2 shadow"
             >
-              {/* Icon */}
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: "var(--pink)" }}
-              >
-                <span className="text-white text-xs font-bold">%</span>
-              </div>
+              <ArrowLeft />
+            </button>
+          </div>
 
-              {/* Text */}
-              <div>
-                <p
-                  className="font-bold text-sm"
-                  style={{ color: "var(--pink)" }}
-                >
-                  {restaurant.discount
-                    ? `${
-                        Number(restaurant.discount) % 1 === 0
-                          ? Math.round(Number(restaurant.discount))
-                          : Number(restaurant.discount)
-                      }% off`
-                    : null}
-                </p>
-                {restaurant.discount_name && (
-                  <p className="text-xs" style={{ color: "var(--gray)" }}>
-                    {restaurant.discount_name}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
 
-          {/* Menu sections */}
-          <div className="mt-8">
-            {menuLoading && (
-              <div className="space-y-3 mb-4">
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Loading menu…
-                </p>
-                <div className="p-4 sm:p-6 bg-card rounded-xl border border-border space-y-3">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              </div>
+          <div className="p-6 space-y-3">
+            <h1 className="text-3xl font-bold">{restaurant.name}</h1>
+
+            {restaurant.avg_rating && (
+              <StarRating rating={restaurant.avg_rating} />
             )}
 
-            {!menuLoading && !hasMenu && (
-              <div className="p-4 sm:p-6 bg-card rounded-xl border border-border">
-                <p className="text-muted-foreground text-sm sm:text-base text-center">
-                  Menu items will be available soon.
-                </p>
-              </div>
-            )}
-
-            {!menuLoading && hasMenu && (
-              <div className="space-y-8 animate-in fade-in-0 duration-200">
-                {/* Scrollable section tabs */}
-                <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pt-2 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-border shadow-sm">
-                  <div className="flex gap-3 overflow-x-auto pb-2">
-                    {menuSections
-                      .filter(
-                        (section) =>
-                          section.items && section.items.length > 0,
-                      )
-                      .map((section) => {
-                        const isActive = section.section_id === activeSectionId;
-                        return (
-                          <button
-                            key={section.section_id}
-                            type="button"
-                            onClick={() => handleSectionClick(section.section_id)}
-                            className={`whitespace-nowrap rounded-full px-3 py-1 text-sm border transition-colors ${
-                              isActive
-                                ? "bg-foreground text-background border-foreground font-semibold shadow-sm"
-                                : "bg-card text-foreground border-border hover:bg-muted"
-                            }`}
-                          >
-                            {section.section_name}
-                          </button>
-                        );
-                      })}
-                  </div>
-                </div>
-
-                {/* Section content */}
-                {menuSections.map((section) =>
-                  section.items && section.items.length > 0 ? (
-                    <div
-                      key={section.section_id}
-                      ref={(el) => {
-                        sectionRefs.current[section.section_id] = el;
-                      }}
-                      className="scroll-mt-24"
-                    >
-                      {section.is_popular ? (
-                        <div className="mb-4">
-                          <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
-                            <span>🔥</span>
-                            <span>{section.section_name}</span>
-                          </h2>
-                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            Most ordered right now
-                          </p>
-                        </div>
-                      ) : (
-                        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">
-                          {section.section_name}
-                        </h2>
-                      )}
-
-                      {section.is_popular ? (
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                          {section.items.map((item) => (
-                            <div
-                              key={item.menu_item_id}
-                              className="flex items-start gap-3 p-3 sm:p-4 rounded-xl border border-border bg-card"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm sm:text-base text-foreground">
-                                  {item.name}
-                                </p>
-                                <div className="mt-1 flex items-baseline gap-2">
-                                  <span className="text-sm sm:text-base font-semibold text-foreground">
-                                    Tk {Number(item.price).toFixed(0)}
-                                  </span>
-                                  {item.original_price &&
-                                    Number(item.original_price) >
-                                      Number(item.price) && (
-                                      <span className="text-xs sm:text-sm text-muted-foreground line-through">
-                                        Tk{" "}
-                                        {Number(item.original_price).toFixed(0)}
-                                      </span>
-                                    )}
-                                </div>
-                              </div>
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                                {item.photo_url ? (
-                                  <img
-                                    src={item.photo_url}
-                                    alt={item.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                                    <ImageOff className="w-4 h-4" />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {section.items.map((item) => (
-                            <div
-                              key={item.menu_item_id}
-                              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-border bg-card hover:shadow-sm transition-shadow"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm sm:text-base text-foreground">
-                                  {item.name}
-                                </p>
-                                <div className="mt-1 flex items-baseline gap-2">
-                                  <span className="text-sm sm:text-base font-semibold text-foreground">
-                                    Tk {Number(item.price).toFixed(0)}
-                                  </span>
-                                  {item.original_price &&
-                                    Number(item.original_price) >
-                                      Number(item.price) && (
-                                      <span className="text-xs sm:text-sm text-muted-foreground line-through">
-                                        Tk{" "}
-                                        {Number(item.original_price).toFixed(0)}
-                                      </span>
-                                    )}
-                                </div>
-                                {item.description && (
-                                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2">
-                                    {item.description}
-                                  </p>
-                                )}
-                                {item.is_popular && (
-                                  <p className="mt-2 text-xs font-medium text-orange-500 flex items-center gap-1">
-                                    <span>🔥</span>
-                                    <span>Popular</span>
-                                  </p>
-                                )}
-                              </div>
-                              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                                {item.photo_url ? (
-                                  <img
-                                    src={item.photo_url}
-                                    alt={item.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                                    <ImageOff className="w-5 h-5" />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : null,
-                )}
-              </div>
+            {restaurant.description && (
+              <p className="text-muted-foreground">{restaurant.description}</p>
             )}
           </div>
+
+
+          <MenuSearchBar
+            query={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery("")}
+          />
+
+
+          {!menuLoading && hasMenu && (
+            <>
+              
+              <div className="sticky top-0 bg-background border-b z-20 py-4">
+                <div className="flex gap-2 overflow-x-auto">
+                  {menuSections
+                    .filter((s) => s.items?.length > 0)
+                    .map((section) => {
+                      const active = section.section_id === activeSectionId;
+
+                      return (
+                        <button
+                          key={section.section_id}
+                          onClick={() => handleSectionClick(section.section_id)}
+                          className={`px-4 py-2 rounded-full text-sm border ${active ? "bg-foreground text-background" : "bg-card"
+                            }`}
+                        >
+                          {section.section_name}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+
+              <div className="space-y-10 py-6">
+                {menuSections.map(
+                  (section) =>
+                    section.items?.length > 0 && (
+                      <div
+                        key={section.section_id}
+                        ref={(el) => (sectionRefs.current[section.section_id] = el)}
+                      >
+                        <h2 className="text-xl font-semibold mb-4">{section.section_name}</h2>
+                        <MenuList menuItems={section.items} onSelect={handleSelectItem} />
+                      </div>
+                    ),
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
-      <BottomNavbar />
+
+
+      {searchQuery && (
+  <div className="fixed inset-0 bg-background z-50 flex flex-col">
+    
+    <div className="max-w-5xl w-full mx-auto px-4 sm:px-6 pt-4 pb-3">
+      <MenuSearchBar
+        query={searchQuery}
+        onSearch={setSearchQuery}
+        onClear={() => setSearchQuery("")}
+        onBack={() => setSearchQuery("")} 
+      />
+    </div>
+
+    
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3">
+      <div className="max-w-5xl mx-auto">
+        {filteredItems.length > 0 ? (
+          <MenuList menuItems={filteredItems} onSelect={handleSelectItem} />
+        ) : (
+          <p className="text-muted-foreground text-center py-10">
+            No results found for "{searchQuery}"
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
 
       {showScrollTop && (
         <button
-          type="button"
-          onClick={handleScrollTop}
-          className="fixed bottom-24 right-4 z-30 rounded-full bg-foreground text-background px-4 py-2 text-xs sm:text-sm font-medium shadow-lg hover:bg-foreground/90 transition-colors"
+          onClick={scrollTop}
+          className="fixed bottom-24 right-6 bg-foreground text-background px-4 py-2 rounded-full shadow"
         >
           ↑ Top
         </button>
       )}
-    </div>
+
+      
+      {!searchQuery && <BottomNavbar />}
+    </>
   );
 };
 

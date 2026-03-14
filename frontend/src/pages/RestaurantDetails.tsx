@@ -33,6 +33,7 @@ const RestaurantDetails = () => {
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
   const [menuLoading, setMenuLoading] = useState(true);
   const [activeSectionId, setActiveSectionId] = useState<number | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   useEffect(() => {
@@ -78,6 +79,16 @@ const RestaurantDetails = () => {
     fetchRestaurant();
     fetchMenu();
   }, [id]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const threshold = 400; // pixels from top before showing button
+      setShowScrollTop(window.scrollY > threshold);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   if (loading) {
     return (
@@ -125,6 +136,13 @@ const RestaurantDetails = () => {
         behavior: "smooth",
       });
     }
+  };
+
+  const handleScrollTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   return (
@@ -418,6 +436,16 @@ const RestaurantDetails = () => {
         </div>
       </div>
       <BottomNavbar />
+
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={handleScrollTop}
+          className="fixed bottom-24 right-4 z-30 rounded-full bg-foreground text-background px-4 py-2 text-xs sm:text-sm font-medium shadow-lg hover:bg-foreground/90 transition-colors"
+        >
+          ↑ Top
+        </button>
+      )}
     </div>
   );
 };

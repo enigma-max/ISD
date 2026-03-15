@@ -38,7 +38,6 @@ const RestaurantPage = () => {
   return (
     <div className="flex min-h-screen bg-background pb-20 relative">
 
-      {/* Filter Drawer Overlay */}
       {drawerOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40"
@@ -46,7 +45,6 @@ const RestaurantPage = () => {
         />
       )}
 
-      {/* Filter Drawer */}
       <div
         className={`fixed inset-y-0 left-0 z-50 w-[320px] max-w-full bg-background shadow-lg transform transition-transform duration-300
         ${drawerOpen ? "translate-x-0" : "-translate-x-full"}`}
@@ -74,10 +72,8 @@ const RestaurantPage = () => {
       </div>
 
 
-      {/* Main Content */}
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6">
 
-        {/* Header */}
         <div className="mb-2">
           <div className="flex items-center justify-between">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
@@ -93,7 +89,6 @@ const RestaurantPage = () => {
               <Search className="w-4 h-4 text-muted-foreground shrink-0" />
             </button>
           </div>
-          {/* Filter Button below heading */}
           <button
             className="mt-4 bg-[#FF2B85] text-primary-foreground rounded-full shadow-lg px-5 py-3 flex items-center gap-2 hover:bg-[#D9226F] transition-all"
             onClick={() => {
@@ -112,7 +107,6 @@ const RestaurantPage = () => {
           </button>
         </div>
 
-        {/* Results */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {Array.from({ length: 6 }).map((_, i) => (

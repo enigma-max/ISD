@@ -18,26 +18,18 @@ export const fetchRestaurants = async (req, res) => {
     const longitude = req.query.lng ? parseFloat(req.query.lng) : null;
 
     console.log('fetching restaurants with query:', req.query);
-    console.log('parsed params:', { page, pageSize, searchQuery, latitude, longitude });
 
     const restaurants = await getRestaurants(page, pageSize, searchQuery, latitude, longitude);
     const totalCount = await getRestaurantCount(searchQuery, latitude, longitude);
     const totalPages = Math.ceil(totalCount / pageSize);
+
     res.json({
       restaurants,
-      pagination: {
-        currentPage: page,
-        pageSize,
-        totalPages,
-        totalCount
-      }
+      pagination: { currentPage: page, pageSize, totalPages, totalCount }
     });
   } catch (error) {
     console.error('Error in fetchRestaurants:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch restaurants',
-      message: error.message 
-    });
+    res.status(500).json({ error: 'Failed to fetch restaurants', message: error.message });
   }
 };
 export const fetchSuggestions = async (req, res) => {

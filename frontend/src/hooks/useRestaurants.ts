@@ -47,7 +47,7 @@ export function useRestaurants({ page = 1, pageSize = 9, searchQuery, latitude,
         }
 
         url = `http://localhost:5000/api/restaurants?${params.toString()}`;
-
+        console.log("Fetching restaurants with URL:", url);
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch restaurants");
         const data = await res.json();

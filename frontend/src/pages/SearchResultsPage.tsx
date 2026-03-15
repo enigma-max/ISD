@@ -85,10 +85,12 @@ const RestaurantPage = () => {
             </h1>
             <button
               onClick={() => navigate("/search")}
-              className="flex items-center gap-2 text-sm border border-border px-3 py-2 rounded-lg"
+              className="flex items-center justify-between w-48 sm:w-64 border border-border px-4 py-2.5 rounded-lg text-sm text-left"
             >
-              <Search className="w-4 h-4" />
-              Search
+              <span className={searchQuery ? "text-foreground" : "text-muted-foreground"}>
+                {searchQuery ? searchQuery : "Search restaurants..."}
+              </span>
+              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
             </button>
           </div>
           {/* Filter Button below heading */}

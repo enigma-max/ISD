@@ -1,4 +1,5 @@
 import type { Cuisine } from "@/data/mockData";
+import { useNavigate } from "react-router-dom";
 import "../styles/variables.css"
 
 interface Props {
@@ -6,6 +7,8 @@ interface Props {
 }
 
 const CuisineCarousel = ({ cuisines }: Props) => {
+  const navigate = useNavigate();
+
   return (
     <>
       <h2 className="font-bold text-foreground text-lg sm:text-xl mb-3">
@@ -14,7 +17,11 @@ const CuisineCarousel = ({ cuisines }: Props) => {
 
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {cuisines.map((c) => (
-          <div key={c.name} className="flex flex-col items-center shrink-0 cursor-pointer group">
+          <div
+            key={c.name}
+            className="flex flex-col items-center shrink-0 cursor-pointer group"
+            onClick={() => navigate(`/search-results?q=${encodeURIComponent(c.name)}`)}
+          >
             <div className="w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-xl overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
               <img
                 src={c.image}

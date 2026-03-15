@@ -199,7 +199,35 @@ const allMenuItems: MenuItem[] = (() => {
               <p className="text-muted-foreground">{restaurant.description}</p>
             )}
           </div>
+            {/* Discount/Deal */}
+          {(restaurant.discount_name || restaurant.discount) && (
+            <div
+              className="mt-4 mb-6 pl-3 pr-8 py-3 rounded-xl inline-flex items-center gap-2 overflow-hidden relative"
+              style={{ backgroundColor: "var(--pink-light)" }}
+            >
+              {/* Icon */}
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "var(--pink)" }}
+              >
+                <span className="text-white text-xs font-bold">%</span>
+              </div>
 
+              {/* Text */}
+              <div>
+                <p className="font-bold text-sm" style={{ color: "var(--pink)" }}>
+                  {restaurant.discount ? `${Number(restaurant.discount) % 1 === 0
+                    ? Math.round(Number(restaurant.discount))
+                    : Number(restaurant.discount)}% off` : null}
+                </p>
+                {restaurant.discount_name && (
+                  <p className="text-xs" style={{ color: "var(--gray)" }}>
+                    {restaurant.discount_name}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <MenuSearchBar
             query={searchQuery}
@@ -212,26 +240,27 @@ const allMenuItems: MenuItem[] = (() => {
             <>
               
               <div className="sticky top-0 bg-background border-b z-20 py-4">
-                <div className="flex gap-2 overflow-x-auto">
-                  {menuSections
-                    .filter((s) => s.items?.length > 0)
-                    .map((section) => {
-                      const active = section.section_id === activeSectionId;
+  <div className="flex gap-2 overflow-x-auto">
+    {menuSections
+      .filter((s) => s.items?.length > 0)
+      .map((section) => {
+        const active = section.section_id === activeSectionId;
 
-                      return (
-                        <button
-                          key={section.section_id}
-                          onClick={() => handleSectionClick(section.section_id)}
-                          className={`px-4 py-2 rounded-full text-sm border ${active ? "bg-foreground text-background" : "bg-card"
-                            }`}
-                        >
-                          {section.section_name}
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-
+        return (
+          <button
+            key={section.section_id}
+            onClick={() => handleSectionClick(section.section_id)}
+            className={`px-4 py-2 rounded-full text-sm border shrink-0 ${
+              active ? "text-white border-transparent" : "bg-card"
+            }`}
+            style={active ? { backgroundColor: "var(--pink)", borderColor: "var(--pink)", fontWeight: 600 } : {}}
+          >
+            {section.section_name}
+          </button>
+        );
+      })}
+  </div>
+</div>
 
               <div className="space-y-10 py-6">
                 {menuSections.map(

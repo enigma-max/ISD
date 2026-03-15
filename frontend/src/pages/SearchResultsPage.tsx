@@ -57,7 +57,7 @@ const RestaurantPage = () => {
             <FilterPanel filters={pendingFilters} onChange={setPendingFilters} />
           </div>
           <button
-            className="w-full bg-primary text-primary-foreground py-3 font-semibold text-base hover:bg-primary/90 transition-all"
+            className="w-full bg-[#FF2B85] text-primary-foreground py-3 font-semibold text-base hover:bg-[#D9226F] transition-all"
             onClick={() => {
               setFilters(pendingFilters);
               setDrawerOpen(false);
@@ -95,7 +95,7 @@ const RestaurantPage = () => {
           </div>
           {/* Filter Button below heading */}
           <button
-            className="mt-4 bg-primary text-primary-foreground rounded-full shadow-lg px-5 py-3 flex items-center gap-2 hover:bg-primary/90 transition-all"
+            className="mt-4 bg-[#FF2B85] text-primary-foreground rounded-full shadow-lg px-5 py-3 flex items-center gap-2 hover:bg-[#D9226F] transition-all"
             onClick={() => {
               setPendingFilters(filters);
               setDrawerOpen(true);

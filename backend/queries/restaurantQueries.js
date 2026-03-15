@@ -17,7 +17,7 @@ WITH all_results AS (
   FROM restaurant r
   LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
-  WHERE r.name ILIKE $3
+  WHERE $3 IS NOT NULL AND r.name ILIKE $3::TEXT -- Cast $3 to TEXT
 
   UNION ALL
 
@@ -44,12 +44,12 @@ WITH all_results AS (
   FROM restaurant r
   LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
-  WHERE r.cuisine_type IN (
+  WHERE $3 IS NOT NULL AND r.cuisine_type IN (
     SELECT DISTINCT cuisine_type
     FROM restaurant
-    WHERE name ILIKE $3
+    WHERE name ILIKE $3::TEXT -- Cast $3 to TEXT
   )
-  AND r.name NOT ILIKE $3
+  AND r.name NOT ILIKE $3::TEXT -- Cast $3 to TEXT
 
   UNION ALL
 
@@ -76,9 +76,11 @@ WITH all_results AS (
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
   WHERE $4::numeric IS NOT NULL AND $5::numeric IS NOT NULL
     AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL
-    AND r.restaurant_id NOT IN (
-      SELECT restaurant_id
-      FROM all_results
+    AND NOT EXISTS (
+      SELECT 1
+      FROM restaurant r2
+      WHERE r2.restaurant_id = r.restaurant_id
+        AND r2.name ILIKE $3::TEXT -- Cast $3 to TEXT
     )
     AND (6371 * acos(
       LEAST(1.0, cos(radians($4)) * cos(radians(l.latitude)) *
@@ -123,9 +125,9 @@ SELECT
   latitude,
   longitude,
   distance_km,
-  -- Compute final priority score: lower is better
   (base_priority - COALESCE((10 - distance_km)/10, 0)) AS priority_score
 FROM aggregated
+WHERE ($3 IS NOT NULL OR ($4::numeric IS NOT NULL AND $5::numeric IS NOT NULL)) -- Ensure at least one filter is applied
 ORDER BY priority_score ASC, avg_rating DESC, name ASC
 LIMIT $1 OFFSET $2;
 `;

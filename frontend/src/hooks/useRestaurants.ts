@@ -22,7 +22,7 @@ const getUserCoords = (): { lat: number; lng: number } | null => {
   }
 };
 
-export function useRestaurants({ page = 1, pageSize = 9, searchQuery,latitude,
+export function useRestaurants({ page = 1, pageSize = 9, searchQuery, latitude,
   longitude }: UseRestaurantsOptions = {}) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,20 +37,16 @@ export function useRestaurants({ page = 1, pageSize = 9, searchQuery,latitude,
         const lng = longitude ?? userCoords?.lng;
 
         let url;
+        const params = new URLSearchParams();
+        params.append("page", String(page));
+        params.append("pageSize", String(pageSize));
+        if (searchQuery && searchQuery.trim()) params.append("q", searchQuery.trim());
         if (lat !== undefined && lng !== undefined) {
-          const params = new URLSearchParams();
-          params.append("page", String(page));
-          params.append("pageSize", String(pageSize));
           params.append("lat", String(lat));
           params.append("lng", String(lng));
-          url = `http://localhost:5000/api/restaurants/nearby?${params.toString()}`;
-        } else {
-          const params = new URLSearchParams();
-          params.append("page", String(page));
-          params.append("pageSize", String(pageSize));
-          if (searchQuery && searchQuery.trim()) params.append("q", searchQuery.trim());
-          url = `http://localhost:5000/api/restaurants?${params.toString()}`;
         }
+
+        url = `http://localhost:5000/api/restaurants?${params.toString()}`;
 
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch restaurants");

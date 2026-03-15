@@ -10,7 +10,11 @@ const SearchPage = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const suggestions = useSearchSuggestions(query);
-  const [recentSearches, setRecentSearches] = useState(["Panshi restaurant", "Digger", "Ramen"]);
+  const [recentSearches, setRecentSearches] = useState([
+    "Pizza Roma",
+    "Kacchi Bhai",
+    "Burger",
+  ]);
 
   const handleSearch = () => {
     if (query.trim()) {
@@ -74,14 +78,18 @@ const SearchPage = () => {
 
         {/* Popular Cuisines */}
         <div className="px-4 sm:px-6 py-4">
-          <h2 className="font-bold text-foreground text-base sm:text-lg mb-3">Popular Cuisines</h2>
+          <h2 className="font-bold text-foreground text-base sm:text-lg mb-3">
+            Popular Cuisines
+          </h2>
           <CuisineCarousel cuisines={cuisines} />
         </div>
 
         {/* Recent Searches */}
         {recentSearches.length > 0 && (
           <div className="px-4 sm:px-6 py-3">
-            <h2 className="font-bold text-foreground text-base sm:text-lg mb-3">Recent searches</h2>
+            <h2 className="font-bold text-foreground text-base sm:text-lg mb-3">
+              Recent searches
+            </h2>
             <div className="space-y-1">
               {recentSearches.map((item) => (
                 <div
@@ -91,9 +99,16 @@ const SearchPage = () => {
                 >
                   <div className="flex items-center gap-3">
                     <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm sm:text-base text-foreground">{item}</span>
+                    <span className="text-sm sm:text-base text-foreground">
+                      {item}
+                    </span>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); removeRecent(item); }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRecent(item);
+                    }}
+                  >
                     <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                   </button>
                 </div>
@@ -104,7 +119,9 @@ const SearchPage = () => {
 
         {/* Popular Searches */}
         <div className="px-4 sm:px-6 py-3">
-          <h2 className="font-bold text-foreground text-base sm:text-lg mb-3">Popular searches</h2>
+          <h2 className="font-bold text-foreground text-base sm:text-lg mb-3">
+            Popular searches
+          </h2>
           <div className="flex flex-wrap gap-2">
             {popularSearches.map((tag) => (
               <button

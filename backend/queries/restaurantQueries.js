@@ -103,7 +103,9 @@ SELECT
   logo_url,
   cover_url,
   avg_rating,
-  total_ratings
+  total_ratings,
+  latitude,
+  longitude
 FROM aggregated
 ORDER BY priority ASC, avg_rating DESC, name ASC
 LIMIT $1 OFFSET $2

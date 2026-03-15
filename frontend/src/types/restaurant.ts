@@ -8,6 +8,9 @@ export interface Restaurant {
   logo_url?: string;
   avg_rating?: number;    
   total_ratings?: number;
+  delivery_time_min?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Rating {

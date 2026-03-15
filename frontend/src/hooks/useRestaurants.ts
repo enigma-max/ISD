@@ -10,6 +10,18 @@ interface UseRestaurantsOptions {
   longitude?: number;
 }
 
+const getUserCoords = (): { lat: number; lng: number } | null => {
+  try {
+    const raw = localStorage.getItem("active_location_coords");
+    if (!raw) return null;
+    const { lat, lng } = JSON.parse(raw);
+    if (typeof lat === "number" && typeof lng === "number") return { lat, lng };
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 export function useRestaurants({ page = 1, pageSize = 9, searchQuery,latitude,
   longitude }: UseRestaurantsOptions = {}) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -27,10 +39,16 @@ export function useRestaurants({ page = 1, pageSize = 9, searchQuery,latitude,
           params.append("q", searchQuery.trim());
         }
         // Add location if provided
-        if (latitude !== undefined && longitude !== undefined) {
-          params.append("lat", String(latitude));
-          params.append("lng", String(longitude));
+         // Use passed coords, or fall back to saved user coords from localStorage
+        const userCoords = getUserCoords();
+        const lat = latitude ?? userCoords?.lat;
+        const lng = longitude ?? userCoords?.lng;
+ 
+        if (lat !== undefined && lng !== undefined) {
+          params.append("lat", String(lat));
+          params.append("lng", String(lng));
         }
+
         const res = await fetch(`http://localhost:5000/api/restaurants?${params.toString()}`);
         if (!res.ok) throw new Error("Failed to fetch restaurants");
         const data = await res.json();
@@ -46,7 +64,7 @@ export function useRestaurants({ page = 1, pageSize = 9, searchQuery,latitude,
       setLoading(false);
     };
     fetchRestaurants();
-  }, [page, pageSize, searchQuery]);
+  }, [page, pageSize, searchQuery, latitude, longitude]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
   console.log(restaurants)

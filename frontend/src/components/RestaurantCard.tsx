@@ -1,13 +1,77 @@
 import type { Restaurant } from "@/types/restaurant";
-import { Star, ImageOff } from "lucide-react";
+import { Star, ImageOff, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 interface Props {
   restaurant: Restaurant;
 }
 
+// Haversine formula — returns distance in km between two lat/lng points
+// ── Delivery time helpers ────────────────────────────────────────────────────
+
+const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+// 10 min base prep + 3 min/km (≈20 km/h city traffic), min 15 min, rounded to 5
+const estimateDeliveryTime = (distanceKm: number): number =>
+  Math.max(15, Math.round((10 + distanceKm * 3) / 5) * 5);
+
 const RestaurantCard = ({ restaurant }: Props) => {
   const navigate = useNavigate();
+  const [deliveryLabel, setDeliveryLabel] = useState<string>("...");
+  
+  useEffect(() => {
+    const calculate = (userLat: number, userLng: number) => {
+      const rLat = Number(restaurant.latitude);
+      const rLng = Number(restaurant.longitude);
+      if (!restaurant.latitude || !restaurant.longitude || isNaN(rLat) || isNaN(rLng)) {
+        setDeliveryLabel("N/A");
+        return;
+      }
+      const distKm = haversineKm(userLat, userLng, rLat, rLng);
+      setDeliveryLabel(`${estimateDeliveryTime(distKm)} min`);
+    };
+
+    // 1. Try saved coords from ConfirmLocation first
+    try {
+      const raw = localStorage.getItem("active_location_coords");
+      if (raw) {
+        const { lat, lng } = JSON.parse(raw);
+        if (typeof lat === "number" && typeof lng === "number") {
+          calculate(lat, lng);
+          return;
+        }
+      }
+    } catch { /* fall through */ }
+
+    // 2. Fallback: ask browser for live GPS
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          // Save for next time
+          localStorage.setItem(
+            "active_location_coords",
+            JSON.stringify({ lat: latitude, lng: longitude })
+          );
+          calculate(latitude, longitude);
+        },
+        () => setDeliveryLabel("N/A")
+      );
+    } else {
+      setDeliveryLabel("N/A");
+    }
+  }, [restaurant.latitude, restaurant.longitude]);
 
   return (
     <div
@@ -69,6 +133,13 @@ const RestaurantCard = ({ restaurant }: Props) => {
             {restaurant.cuisine_type}
           </p>
         </div>
+
+        {/* Row 3: Delivery time — NEW */}
+        <div className="flex items-center gap-1 mt-1">
+          <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground">From {deliveryLabel}</span>
+        </div>
+
       </div>
     </div>
   );

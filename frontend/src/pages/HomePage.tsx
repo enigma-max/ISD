@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, Heart } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
+import ConfirmLocation from "./ConfirmLocation";
 import CuisineCarousel from "@/components/CuisineCarousel";
 import RestaurantCard from "@/components/RestaurantCard";
 import RestaurantCardSkeleton from "@/components/RestaurantCardSkeleton";
@@ -17,17 +18,59 @@ const PAGE_SIZE = 9;
 const HomePage = () => {
   const [page, setPage] = useState(1);
   const { restaurants, loading, totalPages } = useRestaurants({ page, pageSize: PAGE_SIZE });
+  const [activeLocation, setActiveLocation] = useState<string>("");
+  const [showLocationPopup, setShowLocationPopup] = useState(true);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+          );
+          const data = await res.json();
+          setActiveLocation(data.display_name);
+        } catch {
+          const saved = localStorage.getItem("active_location") || "";
+          setActiveLocation(saved);
+        }
+      },
+      () => {
+        const saved = localStorage.getItem("active_location") || "";
+        setActiveLocation(saved);
+      }
+    );
+  }, []);
+
+  const handleLocationConfirmed = () => {
+    const loc = localStorage.getItem("active_location") || "";
+    setActiveLocation(loc);
+    setShowLocationPopup(false);
+  };
+
+  useEffect(() => {
+    if (!showLocationPopup) {
+      const loc = localStorage.getItem("active_location") || "";
+      setActiveLocation(loc);
+    }
+  }, [showLocationPopup]);
+
+  const locationParts = activeLocation.split(",");
+  const locationName = locationParts[0]?.trim() || "Select Location";
+  const locationSub = locationParts.slice(1, 3).join(",").trim() || "";
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 pt-4 pb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowLocationPopup(true)}>
             <MapPin className="w-5 h-5 text-primary" />
             <div>
-              <h1 className="font-bold text-foreground text-sm sm:text-base leading-tight">Buet Chhatri Hall</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">Dhaka</p>
+              <h1 className="font-bold text-foreground text-sm sm:text-base leading-tight">{locationName}</h1>
+              {locationSub && <p className="text-xs sm:text-sm text-muted-foreground">{locationSub}</p>}
             </div>
           </div>
           <Heart className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
@@ -149,6 +192,9 @@ const HomePage = () => {
         </div>
       </div>
       <BottomNavbar />
+      {showLocationPopup && (
+        <ConfirmLocation onConfirm={handleLocationConfirmed} />
+      )}
     </div>
   );
 };

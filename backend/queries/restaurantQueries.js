@@ -12,7 +12,8 @@ WITH all_results AS (
     rt.rating_id,
     l.latitude,
     l.longitude,
-    1 AS priority
+    1 AS base_priority,
+    0 AS distance_km -- name match gets 0 distance bonus
   FROM restaurant r
   LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
@@ -20,7 +21,7 @@ WITH all_results AS (
 
   UNION ALL
 
-  -- Priority 2: Same cuisine as name match, within 10km
+  -- Priority 2: Same cuisine as name match, include distance if coords available
   SELECT
     r.restaurant_id,
     r.name,
@@ -32,7 +33,14 @@ WITH all_results AS (
     rt.rating_id,
     l.latitude,
     l.longitude,
-    2 AS priority
+    2 AS base_priority,
+    COALESCE(
+      6371 * acos(
+        LEAST(1.0, cos(radians($4)) * cos(radians(l.latitude)) *
+        cos(radians(l.longitude) - radians($5)) +
+        sin(radians($4)) * sin(radians(l.latitude)))
+      ), 10
+    ) AS distance_km
   FROM restaurant r
   LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
@@ -42,17 +50,10 @@ WITH all_results AS (
     WHERE name ILIKE $3
   )
   AND r.name NOT ILIKE $3
-  AND ($4::numeric IS NULL OR $5::numeric IS NULL OR (
-    (6371 * acos(
-      cos(radians($4)) * cos(radians(l.latitude)) *
-      cos(radians(l.longitude) - radians($5)) +
-      sin(radians($4)) * sin(radians(l.latitude))
-    )) <= 10
-  ))
 
   UNION ALL
 
-  -- Priority 3: Direct cuisine type match ← THIS is what was missing
+  -- Priority 3: Nearby restaurants (any cuisine) not included above
   SELECT
     r.restaurant_id,
     r.name,
@@ -64,12 +65,26 @@ WITH all_results AS (
     rt.rating_id,
     l.latitude,
     l.longitude,
-    3 AS priority
+    3 AS base_priority,
+    6371 * acos(
+      LEAST(1.0, cos(radians($4)) * cos(radians(l.latitude)) *
+      cos(radians(l.longitude) - radians($5)) +
+      sin(radians($4)) * sin(radians(l.latitude)))
+    ) AS distance_km
   FROM restaurant r
   LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
   LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
-  WHERE r.cuisine_type ILIKE $3
-  AND r.name NOT ILIKE $3
+  WHERE $4::numeric IS NOT NULL AND $5::numeric IS NOT NULL
+    AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL
+    AND r.restaurant_id NOT IN (
+      SELECT restaurant_id
+      FROM all_results
+    )
+    AND (6371 * acos(
+      LEAST(1.0, cos(radians($4)) * cos(radians(l.latitude)) *
+      cos(radians(l.longitude) - radians($5)) +
+      sin(radians($4)) * sin(radians(l.latitude)))
+    )) <= 10
 ),
 aggregated AS (
   SELECT
@@ -81,9 +96,10 @@ aggregated AS (
     cover_url,
     latitude,
     longitude,
-    MIN(priority)                                   AS priority,
-    COALESCE(ROUND(AVG(rating)::numeric, 1), 0)     AS avg_rating,
-    COUNT(rating_id)                                AS total_ratings
+    MIN(base_priority) AS base_priority,
+    COALESCE(ROUND(AVG(rating)::numeric, 1), 0) AS avg_rating,
+    COUNT(rating_id) AS total_ratings,
+    MIN(distance_km) AS distance_km
   FROM all_results
   GROUP BY
     restaurant_id,
@@ -105,10 +121,13 @@ SELECT
   avg_rating,
   total_ratings,
   latitude,
-  longitude
+  longitude,
+  distance_km,
+  -- Compute final priority score: lower is better
+  (base_priority - COALESCE((10 - distance_km)/10, 0)) AS priority_score
 FROM aggregated
-ORDER BY priority ASC, avg_rating DESC, name ASC
-LIMIT $1 OFFSET $2
+ORDER BY priority_score ASC, avg_rating DESC, name ASC
+LIMIT $1 OFFSET $2;
 `;
 // for search suggestions
 export const getRestaurantSuggestionsQuery = `

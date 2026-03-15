@@ -11,9 +11,9 @@ const CuisineCarousel = ({ cuisines }: Props) => {
 
   return (
     <>
-      <h2 className="font-bold text-foreground text-lg sm:text-xl mb-3">
+      {/* <h2 className="font-bold text-foreground text-lg sm:text-xl mb-3">
         Cuisines
-      </h2>
+      </h2> */}
 
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {cuisines.map((c) => (

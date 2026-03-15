@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { UtensilsCrossed, Search, ShoppingCart, User } from "lucide-react";
 
 const navItems = [
-  { label: "Food", icon: UtensilsCrossed, path: "/" },
+  { label: "Food", icon: UtensilsCrossed, path: "/home" },
   { label: "Search", icon: Search, path: "/search" },
   { label: "Carts", icon: ShoppingCart, path: "/cart" },
   { label: "Account", icon: User, path: "/account" },

@@ -3,6 +3,18 @@ import { getRestaurantsQuery } from "../queries/restaurantQueries.js"
 import {getRestaurantSuggestionsQuery} from "../queries/restaurantQueries.js"
 import { getTopDiscountRestaurantsQuery } from "../queries/restaurantQueries.js";
 import { getTopRatedRestaurantsQuery } from "../queries/restaurantQueries.js";
+import { getNearbyRestaurantsQuery, getNearbyRestaurantsCountQuery } from "../queries/restaurantQueries.js";
+
+export const getNearbyRestaurants = async (page, pageSize, latitude, longitude) => {
+  const offset = (page - 1) * pageSize;
+  const result = await pool.query(getNearbyRestaurantsQuery, [pageSize, offset, latitude, longitude]);
+  return result.rows;
+};
+
+export const getNearbyRestaurantsCount = async (latitude, longitude) => {
+  const result = await pool.query(getNearbyRestaurantsCountQuery, [latitude, longitude]);
+  return parseInt(result.rows[0].total);
+};
 
 export const getRestaurants = async (page, pageSize, searchQuery, latitude, longitude) => {
   const offset = (page - 1) * pageSize;
@@ -27,21 +39,25 @@ export const getRestaurants = async (page, pageSize, searchQuery, latitude, long
   return result.rows;
 };
 
-export const getRestaurantCount = async (searchQuery) => {
+export const getRestaurantCount = async (searchQuery, latitude, longitude) => {
   const searchPattern = `%${searchQuery}%`;
   
   const countQuery = `
     SELECT COUNT(DISTINCT r.restaurant_id) as total
     FROM restaurant r
+    LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
     WHERE r.name ILIKE $1
-       OR r.cuisine_type IN (
-         SELECT DISTINCT cuisine_type 
-         FROM restaurant 
-         WHERE name ILIKE $1
-       )
+    AND (
+      $2::numeric IS NULL OR $3::numeric IS NULL OR l.latitude IS NULL OR l.longitude IS NULL
+      OR (6371 * acos(
+        LEAST(1.0, cos(radians($2)) * cos(radians(l.latitude)) *
+        cos(radians(l.longitude) - radians($3)) +
+        sin(radians($2)) * sin(radians(l.latitude)))
+      )) <= 10
+    )
   `;
   
-  const result = await pool.query(countQuery, [searchPattern]);
+  const result = await pool.query(countQuery, [searchPattern, latitude, longitude]);
   return parseInt(result.rows[0].total);
 };
 

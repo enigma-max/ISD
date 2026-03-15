@@ -22,9 +22,9 @@ const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-// 10 min base prep + 3 min/km (≈20 km/h city traffic), min 15 min, rounded to 5
+// 10 min base prep + 3 min/km (≈20 km/h city traffic), min 15 min, max 60 min, rounded to 5
 const estimateDeliveryTime = (distanceKm: number): number =>
-  Math.max(15, Math.round((10 + distanceKm * 3) / 5) * 5);
+  Math.min(60, Math.max(15, Math.round((10 + distanceKm * 3) / 5) * 5));
 
 const RestaurantCard = ({ restaurant }: Props) => {
   const navigate = useNavigate();

@@ -17,9 +17,21 @@ const PAGE_SIZE = 9;
 
 const HomePage = () => {
   const [page, setPage] = useState(1);
-  const { restaurants, loading, totalPages } = useRestaurants({ page, pageSize: PAGE_SIZE });
+  const getCoordsFromStorage = () => {
+    try {
+      const raw = localStorage.getItem("active_location_coords");
+      if (!raw) return {};
+      const { lat, lng } = JSON.parse(raw);
+      return { latitude: lat, longitude: lng };
+    } catch { return {}; }
+  };
+
+  const [userCoords, setUserCoords] = useState(getCoordsFromStorage);
+  const { restaurants, loading, totalPages } = useRestaurants({ page, pageSize: PAGE_SIZE, ...userCoords });
   const [activeLocation, setActiveLocation] = useState<string>("");
-  const [showLocationPopup, setShowLocationPopup] = useState(true);
+  const [showLocationPopup, setShowLocationPopup] = useState(() => {
+    return !sessionStorage.getItem("location_confirmed");
+  });
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -47,6 +59,8 @@ const HomePage = () => {
   const handleLocationConfirmed = () => {
     const loc = localStorage.getItem("active_location") || "";
     setActiveLocation(loc);
+    setUserCoords(getCoordsFromStorage());
+    sessionStorage.setItem("location_confirmed", "true");
     setShowLocationPopup(false);
   };
 
@@ -172,7 +186,7 @@ const HomePage = () => {
         <TopRatedCarousel />
         {/* Restaurant Grid */}
         <div className="px-4 sm:px-6 pt-4">
-          <h2 className="font-bold text-foreground text-lg sm:text-xl mb-4">All Restaurants</h2>
+          <h2 className="font-bold text-foreground text-lg sm:text-xl mb-4">Nearby Restaurants</h2>
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {Array.from({ length: 6 }).map((_, i) => (

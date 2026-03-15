@@ -119,6 +119,83 @@ ORDER BY name
 LIMIT 10
 `;
 
+// Nearby restaurants within 10km, ordered by distance
+export const getNearbyRestaurantsQuery = `
+WITH nearby AS (
+  SELECT
+    r.restaurant_id,
+    r.name,
+    r.cuisine_type,
+    r.pricing,
+    r.logo_url,
+    r.cover_url,
+    l.latitude,
+    l.longitude,
+    rt.rating,
+    rt.rating_id,
+    (6371 * acos(
+      LEAST(1.0, cos(radians($3)) * cos(radians(l.latitude)) *
+      cos(radians(l.longitude) - radians($4)) +
+      sin(radians($3)) * sin(radians(l.latitude)))
+    )) AS distance_km
+  FROM restaurant r
+  LEFT JOIN rating rt ON rt.restaurant_id = r.restaurant_id
+  LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
+  WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL
+  AND (6371 * acos(
+    LEAST(1.0, cos(radians($3)) * cos(radians(l.latitude)) *
+    cos(radians(l.longitude) - radians($4)) +
+    sin(radians($3)) * sin(radians(l.latitude)))
+  )) <= 10
+),
+aggregated AS (
+  SELECT
+    restaurant_id,
+    name,
+    cuisine_type,
+    pricing,
+    logo_url,
+    cover_url,
+    latitude,
+    longitude,
+    MIN(distance_km)                              AS distance_km,
+    COALESCE(ROUND(AVG(rating)::numeric, 1), 0)   AS avg_rating,
+    COUNT(rating_id)                              AS total_ratings
+  FROM nearby
+  GROUP BY
+    restaurant_id, name, cuisine_type, pricing,
+    logo_url, cover_url, latitude, longitude
+)
+SELECT
+  restaurant_id,
+  name,
+  cuisine_type,
+  pricing,
+  logo_url,
+  cover_url,
+  avg_rating,
+  total_ratings,
+  latitude,
+  longitude,
+  distance_km
+FROM aggregated
+ORDER BY distance_km ASC
+LIMIT $1 OFFSET $2
+`;
+
+// Count for nearby restaurants
+export const getNearbyRestaurantsCountQuery = `
+SELECT COUNT(DISTINCT r.restaurant_id) AS total
+FROM restaurant r
+LEFT JOIN location l ON l.restaurant_id = r.restaurant_id
+WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL
+AND (6371 * acos(
+  LEAST(1.0, cos(radians($1)) * cos(radians(l.latitude)) *
+  cos(radians(l.longitude) - radians($2)) +
+  sin(radians($1)) * sin(radians(l.latitude)))
+)) <= 10
+`;
+
 export const getTopDiscountRestaurantsQuery = `
 SELECT 
     r.restaurant_id,

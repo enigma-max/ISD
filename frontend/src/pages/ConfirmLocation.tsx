@@ -44,11 +44,35 @@ export default function ConfirmLocation({ onConfirm }: Props) {
     onConfirm();
   };
 
-  const confirmManual = () => {
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const confirmManual = async () => {
     if (!newLocation.trim()) return;
-    localStorage.removeItem("active_location_coords");
-    localStorage.setItem("active_location", newLocation.trim());
-    onConfirm();
+    setIsGeocoding(true);
+    setLocationError("");
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newLocation.trim())}&limit=1`
+      );
+      const data = await res.json();
+      if (data.length > 0) {
+        localStorage.setItem("active_location_coords", JSON.stringify({
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        }));
+        localStorage.setItem("active_location", newLocation.trim());
+        setIsGeocoding(false);
+        onConfirm();
+      } else {
+        // Location not found — tell the user
+        setLocationError("Location not found. Please try a more specific name.");
+        setIsGeocoding(false);
+      }
+    } catch {
+      setLocationError("Could not search location. Check your internet connection.");
+      setIsGeocoding(false);
+    }
   };
 
   return (
@@ -136,22 +160,28 @@ export default function ConfirmLocation({ onConfirm }: Props) {
               type="text"
               placeholder="Enter your location"
               value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
+              onChange={(e) => { setNewLocation(e.target.value); setLocationError(""); }}
               style={{
-                width: "100%", border: "1px solid #d1d5db",
+                width: "100%", border: `1px solid ${locationError ? "#ef4444" : "#d1d5db"}`,
                 padding: "8px 12px", borderRadius: "8px",
                 fontSize: "0.875rem", outline: "none", boxSizing: "border-box"
               }}
             />
+            {locationError && (
+              <div style={{ color: "#ef4444", fontSize: "0.75rem", marginTop: "4px" }}>
+                {locationError}
+              </div>
+            )}
             <button
               onClick={confirmManual}
+              disabled={isGeocoding}
               style={{
-                marginTop: "8px", width: "100%", backgroundColor: "#ec4899", color: "white",
+                marginTop: "8px", width: "100%", backgroundColor: isGeocoding ? "#d1d5db" : "#f3f4f6",
                 padding: "10px", borderRadius: "8px", fontSize: "0.875rem",
-                fontWeight: 500, border: "none", cursor: "pointer"
+                fontWeight: 500, border: "none", cursor: isGeocoding ? "not-allowed" : "pointer"
               }}
             >
-              Use this location
+              {isGeocoding ? "Finding location..." : "Use this location"}
             </button>
           </div>
         )}

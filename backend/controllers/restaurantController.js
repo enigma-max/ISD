@@ -4,7 +4,9 @@ import {
   getRestaurantSuggestions, 
   getRestaurantDetails,
   getTopDiscountRestaurants,
-  getTopRatedRestaurants
+  getTopRatedRestaurants,
+  getNearbyRestaurants,
+  getNearbyRestaurantsCount
 } from "../services/restaurantService.js"
 
 export const fetchRestaurants = async (req, res) => {
@@ -19,7 +21,7 @@ export const fetchRestaurants = async (req, res) => {
     console.log('parsed params:', { page, pageSize, searchQuery, latitude, longitude });
 
     const restaurants = await getRestaurants(page, pageSize, searchQuery, latitude, longitude);
-    const totalCount = await getRestaurantCount(searchQuery);
+    const totalCount = await getRestaurantCount(searchQuery, latitude, longitude);
     const totalPages = Math.ceil(totalCount / pageSize);
     res.json({
       restaurants,
@@ -89,6 +91,28 @@ export const fetchTopRatedRestaurants = async (req, res) => {
   try {
     const restaurants = await getTopRatedRestaurants();
     res.json(restaurants);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server error" });
+  }
+};
+
+export const fetchNearbyRestaurants = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 9;
+    const latitude = parseFloat(req.query.lat);
+    const longitude = parseFloat(req.query.lng);
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({ error: "lat and lng are required" });
+    }
+
+    const restaurants = await getNearbyRestaurants(page, pageSize, latitude, longitude);
+    const totalCount = await getNearbyRestaurantsCount(latitude, longitude);
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    res.json({ restaurants, pagination: { currentPage: page, pageSize, totalPages, totalCount } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "server error" });

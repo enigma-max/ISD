@@ -35,7 +35,7 @@ const CuisineFilter = ({ selected, onChange }: CuisineFilterProps) => {
               type="checkbox"
               checked={selected.includes(c)}
               onChange={() => toggle(c)}
-              className="accent-primary w-5 h-5 rounded border border-border"
+              className="accent-[#FF2B85] w-5 h-5 rounded border border-border"
             />
             <span className="text-sm">{c}</span>
           </label>

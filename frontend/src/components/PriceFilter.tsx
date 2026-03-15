@@ -24,7 +24,7 @@ const PriceFilter = ({ selected, onChange }: PriceFilterProps) => {
               type="checkbox"
               checked={selected.includes(p)}
               onChange={() => toggle(p)}
-              className="accent-primary w-5 h-5 rounded border border-border"
+              className="accent-[#FF2B85] w-5 h-5 rounded border border-border"
             />
             <span className="text-sm">{p}</span>
           </label>

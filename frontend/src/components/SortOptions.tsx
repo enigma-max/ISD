@@ -22,7 +22,7 @@ const SortOptions = ({ value, onChange }: SortOptionsProps) => {
               value={opt.value}
               checked={value === opt.value}
               onChange={() => onChange(opt.value)}
-              className="accent-primary w-5 h-5 rounded-full border border-border"
+              className="accent-[#FF2B85] w-5 h-5 rounded-full border border-border"
             />
             <span className="text-sm">{opt.label}</span>
           </label>

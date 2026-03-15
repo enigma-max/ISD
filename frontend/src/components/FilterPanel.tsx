@@ -14,7 +14,7 @@ const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
 
   return (
     <aside className="filter-panel flex flex-col h-full bg-background rounded-xl shadow-lg p-4">
-      <h2 className="text-xl font-bold text-primary mb-6 tracking-tight">Filters</h2>
+      <h2 className="text-xl font-bold text-[#FF2B85] mb-6 tracking-tight">Filters</h2>
       <div className="flex-1 overflow-y-auto flex flex-col gap-6">
         <div className="bg-muted rounded-lg p-4 mb-2">
           <h3 className="text-base font-semibold mb-3 text-foreground">Sort by</h3>
@@ -29,7 +29,7 @@ const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                 type="checkbox"
                 checked={filters.freeDelivery}
                 onChange={() => update({ freeDelivery: !filters.freeDelivery })}
-                className="accent-primary w-5 h-5 rounded border border-border"
+                className="accent-[#FF2B85] w-5 h-5 rounded border border-border"
               />
               <span className="text-sm">Free delivery</span>
             </label>
@@ -38,7 +38,7 @@ const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                 type="checkbox"
                 checked={filters.acceptsVouchers}
                 onChange={() => update({ acceptsVouchers: !filters.acceptsVouchers })}
-                className="accent-primary w-5 h-5 rounded border border-border"
+                className="accent-[#FF2B85] w-5 h-5 rounded border border-border"
               />
               <span className="text-sm">Accepts vouchers</span>
             </label>
@@ -47,7 +47,7 @@ const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                 type="checkbox"
                 checked={filters.deals}
                 onChange={() => update({ deals: !filters.deals })}
-                className="accent-primary w-5 h-5 rounded border border-border"
+                className="accent-[#FF2B85] w-5 h-5 rounded border border-border"
               />
               <span className="text-sm">Deals</span>
             </label>

@@ -17,7 +17,7 @@ const FilterFooter = ({ filters, onClear }: FilterFooterProps) => {
       </span>
       <button
         onClick={onClear}
-        className="text-sm font-medium text-primary hover:underline"
+        className="text-sm font-medium text-[#FF2B85] hover:underline"
       >
         Clear all
       </button>

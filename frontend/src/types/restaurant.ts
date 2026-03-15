@@ -6,11 +6,13 @@ export interface Restaurant {
   pricing?: string;
   cover_url?: string;
   logo_url?: string;
-  avg_rating?: number;    
+  avg_rating?: number;
   total_ratings?: number;
   delivery_time_min?: number;
   latitude?: number;
   longitude?: number;
+  discount?: number | string;
+  discount_name?: string;
 }
 
 export interface Rating {

@@ -10,7 +10,12 @@ interface Props {
 // Haversine formula — returns distance in km between two lat/lng points
 // ── Delivery time helpers ────────────────────────────────────────────────────
 
-const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+const haversineKm = (
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+): number => {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
@@ -29,12 +34,21 @@ const estimateDeliveryTime = (distanceKm: number): number =>
 const RestaurantCard = ({ restaurant }: Props) => {
   const navigate = useNavigate();
   const [deliveryLabel, setDeliveryLabel] = useState<string>("...");
-  
+  const [discount, setDiscount] = useState<{
+    discount: number | string;
+    discount_name?: string;
+  } | null>(null);
+
   useEffect(() => {
     const calculate = (userLat: number, userLng: number) => {
       const rLat = Number(restaurant.latitude);
       const rLng = Number(restaurant.longitude);
-      if (!restaurant.latitude || !restaurant.longitude || isNaN(rLat) || isNaN(rLng)) {
+      if (
+        !restaurant.latitude ||
+        !restaurant.longitude ||
+        isNaN(rLat) ||
+        isNaN(rLng)
+      ) {
         setDeliveryLabel("N/A");
         return;
       }
@@ -52,7 +66,9 @@ const RestaurantCard = ({ restaurant }: Props) => {
           return;
         }
       }
-    } catch { /* fall through */ }
+    } catch {
+      /* fall through */
+    }
 
     // 2. Fallback: ask browser for live GPS
     if (navigator.geolocation) {
@@ -62,16 +78,40 @@ const RestaurantCard = ({ restaurant }: Props) => {
           // Save for next time
           localStorage.setItem(
             "active_location_coords",
-            JSON.stringify({ lat: latitude, lng: longitude })
+            JSON.stringify({ lat: latitude, lng: longitude }),
           );
           calculate(latitude, longitude);
         },
-        () => setDeliveryLabel("N/A")
+        () => setDeliveryLabel("N/A"),
       );
     } else {
       setDeliveryLabel("N/A");
     }
   }, [restaurant.latitude, restaurant.longitude]);
+
+  // Fetch discount data for this restaurant
+  useEffect(() => {
+    const fetchDiscount = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/restaurants/${restaurant.restaurant_id}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.discount || data.discount_name) {
+            setDiscount({
+              discount: data.discount,
+              discount_name: data.discount_name,
+            });
+          }
+        }
+      } catch {
+        // Silently fail if discount fetch fails
+      }
+    };
+
+    fetchDiscount();
+  }, [restaurant.restaurant_id]);
 
   return (
     <div
@@ -116,7 +156,8 @@ const RestaurantCard = ({ restaurant }: Props) => {
               </span>
               {restaurant.total_ratings != null && (
                 <span className="text-xs text-muted-foreground">
-                  ({restaurant.total_ratings >= 1000
+                  (
+                  {restaurant.total_ratings >= 1000
                     ? `${Math.floor(restaurant.total_ratings / 1000)}k+`
                     : restaurant.total_ratings}
                   )
@@ -134,12 +175,47 @@ const RestaurantCard = ({ restaurant }: Props) => {
           </p>
         </div>
 
-        {/* Row 3: Delivery time — NEW */}
+        {/* Row 3: Delivery time */}
         <div className="flex items-center gap-1 mt-1">
           <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
-          <span className="text-xs text-muted-foreground">From {deliveryLabel}</span>
+          <span className="text-xs text-muted-foreground">
+            From {deliveryLabel}
+          </span>
         </div>
 
+        {/* Row 4: Discount badge */}
+        {discount && (discount.discount || discount.discount_name) && (
+          <div
+            className="mt-2 px-2 py-1.5 rounded-lg inline-flex items-center gap-1 overflow-hidden"
+            style={{ backgroundColor: "var(--pink-light)" }}
+          >
+            {/* Icon */}
+            <div
+              className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "var(--pink)" }}
+            >
+              <span className="text-white text-xs font-bold">%</span>
+            </div>
+
+            {/* Text */}
+            <div>
+              <p className="font-bold text-xs" style={{ color: "var(--pink)" }}>
+                {discount.discount
+                  ? `${
+                      Number(discount.discount) % 1 === 0
+                        ? Math.round(Number(discount.discount))
+                        : Number(discount.discount)
+                    }% off`
+                  : null}
+              </p>
+              {discount.discount_name && (
+                <p className="text-xs" style={{ color: "var(--gray)" }}>
+                  {discount.discount_name}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

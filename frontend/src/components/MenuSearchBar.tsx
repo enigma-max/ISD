@@ -5,7 +5,7 @@ interface MenuSearchBarProps {
   query: string;
   onSearch: (query: string) => void;
   onClear: () => void;
-  onBack?: () => void; // optional back handler
+  onBack?: () => void; 
 }
 
 const MenuSearchBar = ({

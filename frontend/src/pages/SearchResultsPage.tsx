@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Search, SlidersHorizontal } from "lucide-react";
 
 import RestaurantCard from "@/components/RestaurantCard";
 import RestaurantCardSkeleton from "@/components/RestaurantCardSkeleton";
@@ -74,21 +74,31 @@ const RestaurantPage = () => {
 
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-6">
 
-        <div className="mb-2">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-              Restaurants
-            </h1>
-            <button
-              onClick={() => navigate("/search")}
-              className="flex items-center justify-between w-48 sm:w-64 border border-border px-4 py-2.5 rounded-lg text-sm text-left"
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="text-foreground p-2 hover:bg-secondary rounded-full transition-colors shrink-0"
             >
-              <span className={searchQuery ? "text-foreground" : "text-muted-foreground"}>
-                {searchQuery ? searchQuery : "Search restaurants..."}
-              </span>
-              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
+
+            <div className="flex-1">
+              <button
+                onClick={() => navigate("/search")}
+                className="flex items-center w-full bg-card border border-border rounded-full px-3 py-2.5 transition-all hover:border-muted-foreground/30"
+              >
+                <Search className="w-4 h-4 text-muted-foreground mr-2 shrink-0" />
+                <span className={`text-sm sm:text-base flex-1 text-left ${searchQuery ? "text-foreground" : "text-muted-foreground"}`}>
+                  {searchQuery ? searchQuery : "Search Restaurants and Cuisine"}
+                </span>
+              </button>
+            </div>
           </div>
+
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">
+            Restaurants
+          </h1>
           <button
             className="mt-4 bg-[#FF2B85] text-primary-foreground rounded-full shadow-lg px-5 py-3 flex items-center gap-2 hover:bg-[#D9226F] transition-all"
             onClick={() => {

@@ -34,6 +34,11 @@ const HomePage = () => {
   });
 
   useEffect(() => {
+    const saved = localStorage.getItem("active_location") || "";
+    if (saved) {
+      setActiveLocation(saved);
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const lat = pos.coords.latitude;
@@ -45,13 +50,11 @@ const HomePage = () => {
           const data = await res.json();
           setActiveLocation(data.display_name);
         } catch {
-          const saved = localStorage.getItem("active_location") || "";
-          setActiveLocation(saved);
+          setActiveLocation("");
         }
       },
       () => {
-        const saved = localStorage.getItem("active_location") || "";
-        setActiveLocation(saved);
+        setActiveLocation("");
       }
     );
   }, []);

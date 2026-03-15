@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, ImageOff } from "lucide-react";
+import { ArrowLeft, ImageOff, Clock } from "lucide-react";
 import BottomNavbar from "@/components/BottomNavbar";
 import StarRating from "@/components/StarRating";
 import MenuSearchBar from "@/components/MenuSearchBar";
@@ -14,6 +14,22 @@ type MenuSection = {
   items: MenuItem[];
 };
 
+// ── Delivery time helpers ────────────────────────────────────────────────────
+const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const estimateDeliveryTime = (distanceKm: number): number =>
+  Math.max(15, Math.round((10 + distanceKm * 3) / 5) * 5);
+
 const RestaurantDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -21,6 +37,8 @@ const RestaurantDetails = () => {
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  const [deliveryTime, setDeliveryTime] = useState<string | null>(null);
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
   const [menuLoading, setMenuLoading] = useState(true);
@@ -41,7 +59,17 @@ const RestaurantDetails = () => {
           `http://localhost:5000/api/restaurants/${id}`,
         );
         if (!res.ok) throw new Error();
-        setRestaurant(await res.json());
+        const data = await res.json();
+        setRestaurant(data);
+
+        try {
+          const raw = localStorage.getItem("active_location_coords");
+          if (raw && data.latitude && data.longitude) {
+            const { lat, lng } = JSON.parse(raw);
+            const distKm = haversineKm(lat, lng, Number(data.latitude), Number(data.longitude));
+            setDeliveryTime(`${estimateDeliveryTime(distKm)} min`);
+          }
+        } catch { }
       } catch {
         setNotFound(true);
       } finally {
@@ -193,6 +221,17 @@ const allMenuItems: MenuItem[] = (() => {
 
             {restaurant.avg_rating && (
               <StarRating rating={restaurant.avg_rating} />
+            )}
+
+            {deliveryTime && (
+              <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-border">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-semibold text-foreground">
+                    Delivery {deliveryTime}-{parseInt(deliveryTime) + 15} min
+                  </span>
+                </div>
+              </div>
             )}
 
             {restaurant.description && (

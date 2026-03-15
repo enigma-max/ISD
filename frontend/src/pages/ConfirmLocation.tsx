@@ -107,7 +107,7 @@ export default function ConfirmLocation({ onConfirm }: Props) {
           gap: "12px",
           padding: "12px",
           borderRadius: "12px",
-          border: "2px solid #f472b6",
+          border: "2px solid #e91e8c",
           backgroundColor: "#fff1f2",
           marginBottom: "12px",
           cursor: "pointer"
@@ -116,7 +116,7 @@ export default function ConfirmLocation({ onConfirm }: Props) {
         >
           <div style={{
             width: "20px", height: "20px", borderRadius: "50%",
-            border: "2px solid #f472b6", backgroundColor: "#f472b6",
+            border: "2px solid #e91e8c", backgroundColor: "#e91e8c",
             display: "flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0, marginTop: "2px"
           }}>
@@ -135,7 +135,7 @@ export default function ConfirmLocation({ onConfirm }: Props) {
           onClick={confirmCurrent}
           style={{
             display: "flex", alignItems: "center", gap: "6px",
-            fontSize: "0.875rem", color: "#ec4899", fontWeight: 500,
+            fontSize: "0.875rem", color: "#e91e8c", fontWeight: 500,
             cursor: "pointer", marginBottom: "16px", marginLeft: "4px"
           }}
         >
@@ -162,13 +162,13 @@ export default function ConfirmLocation({ onConfirm }: Props) {
               value={newLocation}
               onChange={(e) => { setNewLocation(e.target.value); setLocationError(""); }}
               style={{
-                width: "100%", border: `1px solid ${locationError ? "#ef4444" : "#d1d5db"}`,
+                width: "100%", border: `1px solid ${locationError ? "#e91e8c" : "#d1d5db"}`,
                 padding: "8px 12px", borderRadius: "8px",
                 fontSize: "0.875rem", outline: "none", boxSizing: "border-box"
               }}
             />
             {locationError && (
-              <div style={{ color: "#ef4444", fontSize: "0.75rem", marginTop: "4px" }}>
+              <div style={{ color: "#e91e8c", fontSize: "0.75rem", marginTop: "4px" }}>
                 {locationError}
               </div>
             )}
@@ -176,7 +176,7 @@ export default function ConfirmLocation({ onConfirm }: Props) {
               onClick={confirmManual}
               disabled={isGeocoding}
               style={{
-                marginTop: "8px", width: "100%", backgroundColor: isGeocoding ? "#d1d5db" : "#f3f4f6",
+                marginTop: "8px", width: "100%", backgroundColor: isGeocoding ? "#e91e8c" : "#e91e8c", color: "white",
                 padding: "10px", borderRadius: "8px", fontSize: "0.875rem",
                 fontWeight: 500, border: "none", cursor: isGeocoding ? "not-allowed" : "pointer"
               }}
@@ -190,7 +190,7 @@ export default function ConfirmLocation({ onConfirm }: Props) {
         <button
           onClick={confirmCurrent}
           style={{
-            width: "100%", backgroundColor: "#ec4899", color: "white",
+            width: "100%", backgroundColor: "#e91e8c", color: "white",
             padding: "14px", borderRadius: "9999px", fontWeight: 600,
             fontSize: "0.95rem", border: "none", cursor: "pointer",
             marginTop: "8px"

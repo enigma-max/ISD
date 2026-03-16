@@ -39,6 +39,35 @@ export const getMenuByRestaurant = async (req, res) => {
   try {
     const { restaurant_id } = req.params;
 
+    const discountSql = `
+      SELECT d.discount
+      FROM discount d
+      WHERE d.restaurant_id = $1
+        AND CURRENT_DATE BETWEEN d.start_date AND d.end_date
+      ORDER BY d.discount DESC
+      LIMIT 1
+    `;
+
+    const discountResult = await pool.query(discountSql, [restaurant_id]);
+    const discountPercent =
+      discountResult.rows.length > 0
+        ? Number(discountResult.rows[0].discount)
+        : null;
+
+    const applyDiscount = (price) => {
+      const base = Number(price);
+      if (
+        !discountPercent ||
+        Number.isNaN(discountPercent) ||
+        discountPercent <= 0 ||
+        Number.isNaN(base)
+      ) {
+        return { price: base, original_price: null };
+      }
+      const discounted = Math.round(base * (1 - discountPercent / 100));
+      return { price: discounted, original_price: base };
+    };
+
     const popularSql = `
       SELECT
         mi.menu_item_id,
@@ -57,7 +86,10 @@ export const getMenuByRestaurant = async (req, res) => {
     `;
 
     const popularResult = await pool.query(popularSql, [restaurant_id]);
-    const popularItems = popularResult.rows;
+    const popularItems = popularResult.rows.map((item) => {
+      const { price, original_price } = applyDiscount(item.price);
+      return { ...item, price, original_price };
+    });
     const popularIds = new Set(popularItems.map((item) => item.menu_item_id));
 
     const sql = `
@@ -92,11 +124,13 @@ export const getMenuByRestaurant = async (req, res) => {
       }
 
       if (row.menu_item_id) {
+        const { price, original_price } = applyDiscount(row.price);
         sectionsMap.get(row.section_id).items.push({
           menu_item_id: row.menu_item_id,
           name: row.name,
           description: row.description,
-          price: row.price,
+          price,
+          original_price,
           photo_url: row.photo_url,
           is_popular: popularIds.has(row.menu_item_id),
         });
@@ -115,8 +149,7 @@ export const getMenuByRestaurant = async (req, res) => {
           name: item.name,
           description: item.description,
           price: item.price,
-          // No original_price column yet; this can be wired
-          // up to a real discount/original price later.
+          original_price: item.original_price,
           photo_url: item.photo_url,
           is_popular: true,
         })),

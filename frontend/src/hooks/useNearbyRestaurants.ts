@@ -37,7 +37,7 @@ export function useNearbyRestaurants({
         params.append("lng", String(longitude));
 
         const res = await fetch(
-          `http://localhost:5000/api/restaurants/nearby?${params.toString()}`
+          `https://foodpanda-search-backend.onrender.com/api/restaurants/nearby?${params.toString()}`
         );
 
         if (!res.ok) throw new Error("Failed to fetch nearby restaurants");

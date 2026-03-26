@@ -19,7 +19,7 @@ export function useTopRated() {
     const fetchTopRated = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/restaurants/top-rated");
+        const res = await fetch("https://foodpanda-search-backend.onrender.com/api/restaurants/top-rated");
         if (!res.ok) throw new Error("Failed to fetch top rated");
         const data = await res.json();
         setRestaurants(Array.isArray(data) ? data : []);

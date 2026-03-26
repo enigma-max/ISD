@@ -49,7 +49,7 @@ export function useRestaurants({ page = 1, pageSize = 9, searchQuery,latitude,
           params.append("lng", String(lng));
         }
 
-        const res = await fetch(`http://localhost:5000/api/restaurants?${params.toString()}`);
+        const res = await fetch(`https://foodpanda-search-backend.onrender.com/api/restaurants?${params.toString()}`);
         if (!res.ok) throw new Error("Failed to fetch restaurants");
         const data = await res.json();
         // If backend returns an array, set totalCount to array length (no pagination info)

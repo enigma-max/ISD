@@ -18,7 +18,7 @@ export function useTopDiscounts() {
     const fetchTopDiscounts = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/restaurants/top-discounts");
+        const res = await fetch("https://foodpanda-search-backend.onrender.com/api/restaurants/top-discounts");
         if (!res.ok) throw new Error("Failed to fetch top discounts");
         const data = await res.json();
         setRestaurants(Array.isArray(data) ? data : []);

@@ -14,7 +14,7 @@ export const useSearchSuggestions = (query: string) => {
     const fetchSuggestions = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/restaurants/suggestions?query=${encodeURIComponent(query)}`,
+          `https://foodpanda-search-backend.onrender.com/api/restaurants/suggestions?query=${encodeURIComponent(query)}`,
           { signal: controller.signal }
         );
 

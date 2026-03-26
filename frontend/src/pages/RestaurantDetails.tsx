@@ -38,7 +38,7 @@ const RestaurantDetails = () => {
     const fetchRestaurant = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/restaurants/${id}`,
+          `https://foodpanda-search-backend.onrender.com/api/restaurants/${id}`,
         );
         if (!res.ok) throw new Error();
         setRestaurant(await res.json());
@@ -52,7 +52,7 @@ const RestaurantDetails = () => {
     const fetchMenu = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/restaurants/menu/${id}`,
+          `https://foodpanda-search-backend.onrender.com/api/restaurants/menu/${id}`,
         );
         const data = await res.json();
 
